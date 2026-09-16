@@ -380,7 +380,15 @@ function pintarLobby() {
       <span class="premio">${j.espectador ? '👁' : j.pronto ? 'PRONTO' : '...'}</span>
     </div>`).join('');
 
+  // §48: cada um escolhe como aparece na mesa, e dá para trocar até começar.
   const eu = euNaVisao();
+  const campoNome = $('lobby-meu-nome');
+  if (document.activeElement !== campoNome) campoNome.value = eu?.nome ?? ctx.perfil.nome;
+  campoNome.disabled = ocupado;
+  $('btn-salvar-nome').disabled = ocupado;
+  $('btn-salvar-nome').onclick = () => trocarNome(campoNome.value);
+  campoNome.onkeydown = (e) => { if (e.key === 'Enter') trocarNome(campoNome.value); };
+
   const btnPronto = $('btn-pronto');
   btnPronto.textContent = eu?.pronto ? 'NÃO ESTOU PRONTO' : 'ESTOU PRONTO';
   btnPronto.disabled = ocupado || eu?.espectador;
@@ -392,6 +400,18 @@ function pintarLobby() {
   btnIniciar.onclick = () => { som.botao(); acao('iniciar', { codigo: visao.codigo }); };
 
   $('btn-copiar-link').onclick = copiarConvite;
+}
+
+async function trocarNome(bruto) {
+  const nome = String(bruto ?? '').trim().slice(0, 18);
+  if (!nome) return ctx.torrada('Escolha um nome.');
+  if (nome === euNaVisao()?.nome) return;
+  som.botao();
+  ctx.perfil.nome = nome;
+  ctx.atualizarTopo();
+  // `entrar` com o assento já ocupado só atualiza o nome de quem voltou (§66).
+  const resposta = await acao('entrar', { codigo: visao.codigo });
+  if (resposta) ctx.torrada(`Agora você é ${escapar(nome)} nesta mesa.`);
 }
 
 async function copiarConvite() {
@@ -419,7 +439,6 @@ function pintarMesa() {
     : `Rodada ${visao.rodada}`;
   $('sala-codigo-mesa').textContent = visao.codigo;
 
-  // dealer
   const caixaDealer = $('sala-cartas-dealer');
   caixaDealer.innerHTML = '';
   for (const carta of visao.dealer.cartas) caixaDealer.append(elementoCarta(carta));
@@ -427,14 +446,20 @@ function pintarMesa() {
     caixaDealer.append(elementoCarta(null, { virada: true }));
   }
   $('sala-valor-dealer').innerHTML = visao.dealer.cartas.length
-    ? `<span class="valor ${visao.dealer.revelado && visao.dealer.valor > 21 ? 'ruim' : ''}">${
+    ? `<span class="valor-lugar ${visao.dealer.revelado && visao.dealer.valor > 21 ? 'ruim' : ''}">${
       visao.dealer.revelado && visao.dealer.valor > 21
         ? `${visao.dealer.valor} · ESTOUROU`
         : textoValor(visao.dealer.cartas)}</span>`
     : '';
 
-  pintarOutros();
-  pintarMinhaArea(eu);
+  pintarLugares();
+  $('sala-minhas-fichas').innerHTML = eu && !eu.espectador
+    ? `<span class="moeda"></span> ${fmt(eu.fichas)}`
+    : 'assistindo';
+  if (eu) {
+    pintarFichasDeAposta(eu);
+    pintarAcoes(eu);
+  }
   pintarRanking();
 
   $('btn-ranking-celular').onclick = () => {
@@ -451,85 +476,137 @@ function pintarMesa() {
   };
 }
 
-function pintarOutros() {
-  const outros = visao.jogadores.filter((j) => j.id !== meuId() && !j.espectador);
-  const caixa = $('sala-outros');
-  caixa.innerHTML = '';
+// ---------------------------------------------------------------- lugares
 
-  for (const j of outros) {
-    const el = document.createElement('div');
-    el.className = 'jogador-mesa';
-    if (visao.vezDe === j.id) el.classList.add('na-vez');
-    if (!j.conectado) el.classList.add('fora');
-
-    const cartas = j.maos.map((mao) => `
-      <div class="mini-mao ${mao.resultado ? mao.resultado.toLowerCase() : ''}">
-        ${mao.cartas.map((c) => `<span class="mini-carta ${'♥♦'.includes(c.naipe) ? 'vermelha' : ''}">${c.valor}${c.naipe}</span>`).join('')}
-        <span class="mini-valor">${mao.valor > 21 ? `${mao.valor}!` : mao.valor}</span>
-      </div>`).join('');
-
-    el.innerHTML = `
-      <div class="cabeca">
-        <span class="av">${j.avatar ?? '🂡'}</span>
-        <b>${escapar(j.nome)}</b>
-        ${visao.vezDe === j.id ? '<span class="agora">jogando</span>' : ''}
-        ${j.conectado ? '' : '<span class="agora fora">caiu</span>'}
-      </div>
-      <div class="fichas-jogador"><span class="moeda"></span> ${fmt(j.fichas)}
-        ${j.apostaPendente ? `<span class="aposta-na-mesa">apostou ${fmt(j.apostaPendente)}</span>` : ''}</div>
-      <div class="minis">${cartas || '<span class="vazio">sem cartas</span>'}</div>`;
-    caixa.append(el);
-  }
-
-  caixa.parentElement.hidden = outros.length === 0;
+// Quem está nesta tela senta sempre no meio do arco, de frente para o dealer.
+// É o que a pessoa espera de uma mesa: a mão dela na frente, os outros ao lado.
+function centralizarEmMim(lista) {
+  const meu = lista.findIndex((j) => j.id === meuId());
+  if (meu < 0 || lista.length < 2) return lista;
+  const centro = Math.floor((lista.length - 1) / 2);
+  const giro = (meu - centro + lista.length) % lista.length;
+  return [...lista.slice(giro), ...lista.slice(0, giro)];
 }
 
-function pintarMinhaArea(eu) {
-  const caixaMaos = $('sala-minhas-maos');
-  caixaMaos.innerHTML = '';
+// Arco da mesa: o lugar do meio é o mais baixo e os das pontas sobem, como no
+// feltro de verdade.
+//
+// O espaçamento é por DISTÂNCIA, não por ângulo: dividindo o arco em ângulos
+// iguais, os lugares das pontas se encavalam, porque lá a curva anda mais na
+// vertical do que na horizontal. Com nove jogadores dois pares se cobriam.
+function posicaoNoArco(i, total) {
+  const RAIO_X = 43;     // metade da largura do arco, em % do feltro
+  const RAIO_Y = 30;     // quanto as pontas sobem
+  const BASE_Y = 78;     // altura do lugar do meio
 
-  if (!eu || eu.espectador) {
-    caixaMaos.innerHTML = '<div class="vazio">Você está assistindo esta partida.</div>';
-    $('sala-acoes').innerHTML = '';
-    $('sala-fichas').innerHTML = '';
-    return;
-  }
+  if (total === 1) return { x: 50, y: BASE_Y };
 
-  eu.maos.forEach((mao, i) => {
+  const uso = Math.min(1, total / 8);              // mesa vazia não espalha tanto
+  const t = ((i / (total - 1)) - 0.5) * uso;       // -0.5..0.5
+  const x = 50 + t * 2 * RAIO_X;
+
+  const seno = (x - 50) / RAIO_X;
+  const cosseno = Math.sqrt(Math.max(0, 1 - seno * seno));
+  return { x, y: BASE_Y - (1 - cosseno) * RAIO_Y };
+}
+
+function pilhaDeFichas(valor) {
+  const quantas = Math.min(5, Math.max(1, Math.ceil(Math.log10(Math.max(10, valor)))));
+  const cores = ['a', 'b', 'c'];
+  const fichinhas = Array.from({ length: quantas },
+    (_, i) => `<i class="fichinha ${cores[i % cores.length]}"></i>`).join('');
+  return `<span class="pilha"><span class="fichinhas">${fichinhas}</span>${fmt(valor)}</span>`;
+}
+
+function pintarLugares() {
+  const caixa = $('sala-lugares');
+  const naMesa = visao.jogadores.filter((j) => !j.espectador);
+  const ordem = centralizarEmMim(naMesa);
+
+  // Com a mesa cheia os lugares encolhem para caber lado a lado sem se cobrir.
+  caixa.style.setProperty('--escala-lugar',
+    ordem.length >= 9 ? '.66' : ordem.length >= 7 ? '.8' : '1');
+  // Mesa cheia: o avatar sai da placa para o nome caber inteiro.
+  caixa.classList.toggle('apertado', ordem.length >= 7);
+  caixa.innerHTML = '';
+
+  ordem.forEach((j, i) => {
+    const { x, y } = posicaoNoArco(i, ordem.length);
     const el = document.createElement('div');
-    el.className = 'mao';
-    if (visao.vezDe === meuId() && i === eu.maoAtual && eu.maos.length > 1) el.classList.add('ativa');
+    el.className = 'lugar';
+    if (j.id === meuId()) el.classList.add('eu');
+    if (visao.vezDe === j.id) el.classList.add('na-vez');
+    if (!j.conectado) el.classList.add('fora');
+    el.style.left = `${x}%`;
+    el.style.top = `${y}%`;
 
-    const cartas = document.createElement('div');
-    cartas.className = 'cartas';
-    for (const c of mao.cartas) cartas.append(elementoCarta(c));
+    const maos = document.createElement('div');
+    maos.className = 'maos-lugar';
 
-    const info = document.createElement('div');
-    info.className = 'info';
-    const classe = mao.status === STATUS_MAO.BLACKJACK ? 'bj'
-      : mao.valor > 21 ? 'ruim' : mao.valor === 21 ? 'bom' : '';
-    info.innerHTML = `<span class="valor ${classe}">${
-      mao.status === STATUS_MAO.BLACKJACK ? 'BLACKJACK' : textoValor(mao.cartas)}</span>
-      <span class="aposta-na-mesa"><span class="moeda"></span> ${fmt(mao.aposta)}${mao.dobrada ? ' ·2x' : ''}</span>`;
-
-    if (mao.resultado) {
-      const mapa = {
-        WIN: ['ganhou', mao.status === STATUS_MAO.BLACKJACK ? 'BLACKJACK' : 'VENCEU'],
-        PUSH: ['empatou', 'EMPATE'],
-        LOSE: ['perdeu', mao.status === STATUS_MAO.BUST ? 'ESTOUROU'
-          : mao.status === STATUS_MAO.SURRENDER ? 'DESISTIU' : 'PERDEU'],
-      };
-      const [cl, texto] = mapa[mao.resultado] ?? ['', ''];
-      info.innerHTML += `<span class="etiqueta ${cl}">${texto}</span>`;
+    if (j.maos.length === 0) {
+      const vazio = document.createElement('div');
+      vazio.className = 'circulo';
+      maos.append(vazio);
     }
 
-    el.append(cartas, info);
-    caixaMaos.append(el);
-  });
+    j.maos.forEach((mao, indice) => {
+      const bloco = document.createElement('div');
+      bloco.className = 'mao-lugar';
+      if (visao.vezDe === j.id && indice === j.maoAtual && j.maos.length > 1) {
+        bloco.style.filter = 'drop-shadow(0 0 10px rgba(217,180,91,.8))';
+      }
 
-  $('sala-minhas-fichas').innerHTML = `<span class="moeda"></span> ${fmt(eu.fichas)}`;
-  pintarFichasDeAposta(eu);
-  pintarAcoes(eu);
+      const cartas = document.createElement('div');
+      cartas.className = 'cartas-lugar';
+      for (const c of mao.cartas) cartas.append(elementoCarta(c));
+
+      const linha = document.createElement('div');
+      linha.style.display = 'grid';
+      linha.style.justifyItems = 'center';
+      linha.style.gap = '3px';
+
+      const classe = mao.status === STATUS_MAO.BLACKJACK ? 'bj'
+        : mao.valor > 21 ? 'ruim' : mao.valor === 21 ? 'bom' : '';
+      const texto = mao.status === STATUS_MAO.BLACKJACK ? 'BJ' : String(mao.valor);
+      linha.innerHTML = `<span class="valor-lugar ${classe}">${texto}</span>`;
+
+      if (mao.resultado) {
+        const mapa = {
+          WIN: ['ganhou', mao.status === STATUS_MAO.BLACKJACK ? 'BLACKJACK' : 'VENCEU'],
+          PUSH: ['empatou', 'EMPATE'],
+          LOSE: ['perdeu', mao.status === STATUS_MAO.BUST ? 'ESTOUROU'
+            : mao.status === STATUS_MAO.SURRENDER ? 'DESISTIU' : 'PERDEU'],
+        };
+        const [cl, rotulo] = mapa[mao.resultado] ?? ['', ''];
+        linha.innerHTML += `<span class="etiqueta ${cl}">${rotulo}</span>`;
+      }
+
+      bloco.append(cartas, linha);
+      maos.append(bloco);
+    });
+
+    const apostado = j.apostaPendente || j.maos.reduce((t, m) => t + m.aposta, 0);
+    const placa = document.createElement('div');
+    placa.className = 'placa';
+    placa.innerHTML = `<span class="av">${j.avatar ?? '🂡'}</span><b>${escapar(j.nome)}</b>
+      <span class="fichas">${fmt(j.fichas)}</span>`;
+
+    // §87: no celular as cartas dos outros ficam escondidas para caber todo
+    // mundo; tocar no lugar abre a mão e os números da pessoa.
+    if (j.id !== meuId()) {
+      el.onclick = () => mostrarJogador(j);
+      el.style.cursor = 'pointer';
+    }
+
+    el.append(maos);
+    if (apostado > 0) {
+      const fichas = document.createElement('div');
+      fichas.innerHTML = pilhaDeFichas(apostado);
+      el.append(fichas);
+    }
+    el.append(placa);
+    caixa.append(el);
+  });
 }
 
 function pintarFichasDeAposta(eu) {
@@ -622,6 +699,32 @@ function pintarAcoes(eu) {
     b.onclick = () => { som.botao(); acao('agir', { codigo: visao.codigo, jogada }); };
     caixa.append(b);
   }
+}
+
+function mostrarJogador(j) {
+  som.botao();
+  const maos = j.maos.length
+    ? j.maos.map((mao, i) => `
+        <div class="item">
+          <span class="ic">${mao.valor > 21 ? '💥' : mao.status === STATUS_MAO.BLACKJACK ? '🃏' : '🂡'}</span>
+          <span><b>${mao.cartas.map((c) => c.valor + c.naipe).join('  ')}</b>
+            <small>${j.maos.length > 1 ? `Mão ${i + 1} · ` : ''}valor ${mao.valor}${
+              mao.dobrada ? ' · dobrou' : ''}${mao.resultado ? ` · ${mao.resultado}` : ''}</small></span>
+          <span class="premio">${fmt(mao.aposta)}</span>
+        </div>`).join('')
+    : '<div class="vazio">Sem cartas nesta rodada.</div>';
+
+  const e = j.estatisticas ?? {};
+  ctx.modal(`${j.avatar ?? '🂡'} ${j.nome}`,
+    `<div class="numeros" style="margin-bottom:14px">
+       <div class="numero"><b>${fmt(j.fichas)}</b><span>Fichas</span></div>
+       <div class="numero"><b>${fmt(e.vitorias ?? 0)}</b><span>Vitórias</span></div>
+       <div class="numero"><b>${fmt(e.blackjacks ?? 0)}</b><span>Blackjacks</span></div>
+       <div class="numero"><b>${fmt(e.busts ?? 0)}</b><span>Estouros</span></div>
+     </div>
+     ${maos}
+     ${j.conectado ? '' : '<div class="vazio">Está desconectado; a vaga fica guardada.</div>'}`,
+    [{ texto: 'FECHAR', classe: 'ouro' }]);
 }
 
 function pintarRanking() {

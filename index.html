@@ -220,6 +220,13 @@
       </div>
       <div class="cartao">
         <h2>Jogadores</h2>
+        <div class="opcao">
+          <div><b>Seu nome na mesa</b><small>D&#225; para trocar at&#233; a partida come&#231;ar</small></div>
+          <div class="linha-botoes">
+            <input class="entrada" id="lobby-meu-nome" maxlength="18" autocomplete="off">
+            <button class="botao discreto" id="btn-salvar-nome">SALVAR</button>
+          </div>
+        </div>
         <div id="lobby-jogadores"></div>
         <div class="linha-botoes" style="margin-top:16px">
           <button class="botao verde" id="btn-pronto">ESTOU PRONTO</button>
@@ -229,32 +236,54 @@
     </div>
 
     <div class="mesa-online" id="sala-mesa" hidden>
-      <div class="mesa" id="mesa-sala">
-        <div class="topo-sala">
-          <span class="etiqueta" id="sala-rodada">Rodada</span>
-          <button class="etiqueta so-celular" id="btn-ranking-celular">RANKING 🏆</button>
-          <span class="etiqueta">Sala <b id="sala-codigo-mesa"></b></span>
-        </div>
+      <div class="pano">
+        <div class="feltro" id="feltro">
+          <svg class="pintura" viewBox="0 0 1000 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <!-- As curvas do letreiro ficam na faixa livre entre o dealer e os
+                 lugares; os riscos brancos acompanham a borda da mesa. -->
+            <defs>
+              <path id="arco-alto" d="M 175 300 Q 500 208 825 300"></path>
+              <path id="arco-baixo" d="M 230 352 Q 500 280 770 352"></path>
+            </defs>
+            <path d="M 80 292 Q 500 548 920 292" class="risco"></path>
+            <path d="M 30 250 Q 500 540 970 250" class="risco fina"></path>
+            <text class="texto-mesa grande">
+              <textPath href="#arco-alto" startOffset="50%" text-anchor="middle">
+                BLACKJACK PAGA 3 PARA 2
+              </textPath>
+            </text>
+            <text class="texto-mesa media">
+              <textPath href="#arco-baixo" startOffset="50%" text-anchor="middle">
+                O dealer compra at&#233; 16 e para em todos os 17
+              </textPath>
+            </text>
+          </svg>
 
-        <div class="lado">
-          <div class="rotulo">Dealer <span id="sala-valor-dealer"></span></div>
-          <div class="maos"><div class="mao"><div class="cartas" id="sala-cartas-dealer"></div></div></div>
-        </div>
-
-        <div class="faixa-outros"><div class="outros" id="sala-outros"></div></div>
-
-        <div class="lado">
-          <div class="maos" id="sala-minhas-maos"></div>
-          <div class="controles">
-            <div class="relogio" id="sala-relogio" hidden></div>
-            <div class="caixa-aposta">
-              <span class="rot">SUAS FICHAS</span>
-              <span class="vlr" id="sala-minhas-fichas">0</span>
-            </div>
-            <div class="linha-botoes" id="sala-fichas"></div>
-            <div class="linha-botoes" id="sala-acoes"></div>
-            <div class="dica" id="sala-dica"></div>
+          <div class="topo-sala">
+            <span class="canto">
+              <span class="etiqueta" id="sala-rodada">Rodada</span>
+              <button class="etiqueta so-celular" id="btn-ranking-celular">RANKING &#127942;</button>
+            </span>
+            <span class="etiqueta">Sala <b id="sala-codigo-mesa"></b></span>
           </div>
+
+          <div class="lugar-dealer">
+            <div class="rotulo">Dealer <span id="sala-valor-dealer"></span></div>
+            <div class="cartas" id="sala-cartas-dealer"></div>
+          </div>
+
+          <div class="lugares" id="sala-lugares"></div>
+        </div>
+
+        <div class="painel-inferior">
+          <div class="relogio" id="sala-relogio" hidden></div>
+          <div class="caixa-aposta">
+            <span class="rot">SUAS FICHAS</span>
+            <span class="vlr" id="sala-minhas-fichas">0</span>
+          </div>
+          <div class="linha-botoes" id="sala-fichas"></div>
+          <div class="linha-botoes" id="sala-acoes"></div>
+          <div class="dica" id="sala-dica"></div>
         </div>
       </div>
 

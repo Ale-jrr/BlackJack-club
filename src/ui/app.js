@@ -409,7 +409,7 @@ prepararMesa({
   aoTerminarRodada: () => { if (telaAtual === 'jogo') { /* a lateral se repinta sozinha */ } },
 });
 
-prepararSalas({ perfil, torrada, anuncio, modal, irPara: forcarIr });
+prepararSalas({ perfil, torrada, anuncio, modal, irPara: forcarIr, atualizarTopo });
 
 configurarSom(perfil.som);
 document.addEventListener('pointerdown', () => acordarAudio(perfil.som), { once: true });

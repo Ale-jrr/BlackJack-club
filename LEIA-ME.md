@@ -106,8 +106,13 @@ Fases 1 a 4 do projeto, mais as mesas por nível da Fase 5:
 - Estatísticas, histórico das rodadas, perfil com nome e avatar, tutorial, som.
 - Seis mesas desbloqueando por nível.
 - **Modo jogar com amigos**: criar sala com as regras do ADM, código de convite e link,
-  lobby com pronto, até 10 jogadores, aposta com prazo, jogada **um por vez** com cronômetro,
-  dealer compartilhado, ranking da sala, campeão, recompra, espectadores, reconexão.
+  lobby com pronto e nome editável, até 10 jogadores, aposta com prazo, jogada **um por vez**
+  com cronômetro, dealer compartilhado, ranking da sala, campeão, recompra, espectadores,
+  reconexão.
+- Mesa online desenhada como mesa de verdade: dealer no topo, lugares em arco com fichas e
+  placa de cada jogador, e você sempre no meio. No celular o arranjo muda (§87): os outros
+  viram fichas de uma linha e a sua mão fica grande embaixo; tocar em alguém abre as cartas
+  dele.
 - Interface de cassino que funciona no toque; no celular o miolo da mesa vira painel de números.
 
 ## O que falta
