@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testes — BlackJack Club</title>
+<style>
+  body { background:#0b0f0c; color:#e8ecd9; font:15px/1.5 ui-monospace, Consolas, monospace; margin:0; padding:24px; }
+  h1 { font-size:18px; margin:0 0 4px; color:#d4af37; }
+  #resumo { margin:12px 0 18px; font-size:16px; }
+  .ok { color:#6ede8a; }
+  .falha { color:#ff6b6b; }
+  ul { list-style:none; padding:0; margin:0; }
+  li { padding:3px 0; border-bottom:1px solid #1b241d; }
+  .erro { color:#ffb4a2; padding-left:22px; font-size:13px; }
+</style>
+</head>
+<body>
+<h1>BlackJack Club — testes do motor</h1>
+<div id="resumo">rodando…</div>
+<ul id="lista"></ul>
+<script type="module">
+  import { rodar } from './testes.js';
+  const resultados = await rodar();
+  const falhas = resultados.filter(r => !r.ok);
+  document.getElementById('resumo').innerHTML = falhas.length
+    ? `<span class="falha">${falhas.length} falha(s)</span> de ${resultados.length}`
+    : `<span class="ok">${resultados.length} testes passaram</span>`;
+  document.getElementById('lista').innerHTML = resultados.map(r =>
+    `<li><span class="${r.ok?'ok':'falha'}">${r.ok?'PASSOU':'FALHOU'}</span> ${r.nome}` +
+    (r.ok?'':`<div class="erro">${r.erro}</div>`) + '</li>').join('');
+  window.__resultados = resultados;
+</script>
+</body>
+</html>

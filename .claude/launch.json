@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "blackjack",
+      "runtimeExecutable": "py",
+      "runtimeArgs": ["C:/Users/Mayk/blackjack-club/servidor.py", "5180", "C:/Users/Mayk/blackjack-club"],
+      "port": 5180
+    }
+  ]
+}

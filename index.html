@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07090a">
+<title>BlackJack Club</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🂡</text></svg>">
+<link rel="stylesheet" href="./src/ui/estilo.css">
+</head>
+<body>
+
+<header id="topo">
+  <button class="voltar" id="btn-voltar" hidden>← Menu</button>
+  <div class="avatar" id="avatar">🂡</div>
+  <div class="quem">
+    <div class="nome"><span id="nome-jogador">Jogador</span><span class="nivel" id="nivel">Nível 1</span></div>
+    <div class="barra"><i id="barra-xp" style="width:0%"></i></div>
+    <div class="xp" id="texto-xp">0 / 250 XP</div>
+  </div>
+  <div id="saldo"><span class="moeda"></span> <span id="valor-saldo">0</span></div>
+</header>
+
+<main>
+  <!-- ------------------------------------------------------------ menu -->
+  <section class="tela rolavel ativa" id="tela-menu">
+    <div class="folha">
+      <div class="hero">
+        <div class="marca">BLACKJACK CLUB</div>
+        <div class="naipes">♠ <span class="r">♥</span> <span class="r">♦</span> ♣</div>
+        <div class="sub">Fichas virtuais. Sem dinheiro real, sem depósito, sem saque.</div>
+      </div>
+      <nav class="menu-grade" id="menu-grade"></nav>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------ jogo -->
+  <section class="tela" id="tela-jogo">
+    <div class="mesa" id="mesa">
+      <div class="faixa-mesa"><b>BLACKJACK CLUB</b><span id="faixa-regras">BLACKJACK PAGA 3:2 · DEALER PARA NO 17</span></div>
+
+      <div class="lado" id="lado-dealer">
+        <div class="rotulo">Dealer <span id="valor-dealer"></span></div>
+        <div class="maos"><div class="mao"><div class="cartas" id="cartas-dealer"></div></div></div>
+      </div>
+
+      <div class="meio"><div class="tiras" id="tiras-mesa"></div></div>
+
+      <div class="lado" id="lado-jogador">
+        <div class="maos" id="maos-jogador"></div>
+        <div class="controles" id="controles">
+          <div class="caixa-aposta" id="caixa-aposta">
+            <span class="rot">APOSTA</span>
+            <span class="vlr" id="valor-aposta">0</span>
+            <button class="botao discreto" id="btn-limpar">LIMPAR</button>
+            <button class="botao discreto" id="btn-repetir">REPETIR</button>
+            <button class="botao discreto" id="btn-dobrar-aposta">DOBRAR</button>
+          </div>
+          <div class="fichas" id="fichas"></div>
+          <div class="linha-botoes" id="acoes"></div>
+          <div class="dica" id="dica"></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="lateral">
+      <div class="cartao" style="grid-template-rows:auto auto">
+        <h2 id="titulo-mesa">Mesa</h2>
+        <div class="numeros" id="resumo-sessao"></div>
+      </div>
+      <div class="cartao">
+        <h2>Últimas rodadas</h2>
+        <div class="lista-rolagem" id="historico-lateral"></div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ----------------------------------------------------------- mesas -->
+  <section class="tela rolavel" id="tela-mesas">
+    <div class="folha">
+      <div class="cartao">
+        <h2>Escolha a mesa</h2>
+        <div id="lista-mesas"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------- missões -->
+  <section class="tela rolavel" id="tela-missoes">
+    <div class="folha">
+      <div class="cartao">
+        <h2>Bônus diário</h2>
+        <div class="trilha" id="trilha-bonus"></div>
+        <div class="linha-botoes" style="margin-top:16px">
+          <button class="botao ouro" id="btn-bonus">RESGATAR</button>
+        </div>
+      </div>
+      <div class="grade-cartoes">
+        <div class="cartao"><h2>Missões diárias</h2><div id="missoes-diarias"></div></div>
+        <div class="cartao"><h2>Missões semanais</h2><div id="missoes-semanais"></div></div>
+      </div>
+      <div class="cartao"><h2>Conquistas</h2><div id="lista-conquistas"></div></div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------- estatísticas -->
+  <section class="tela rolavel" id="tela-estatisticas">
+    <div class="folha">
+      <div class="cartao"><h2>Estatísticas</h2><div class="numeros" id="numeros-stats"></div></div>
+      <div class="cartao"><h2>Histórico de rodadas</h2><div id="historico-completo"></div></div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------- perfil -->
+  <section class="tela rolavel" id="tela-perfil">
+    <div class="folha">
+      <div class="cartao">
+        <h2>Perfil</h2>
+        <div class="opcao">
+          <div><b>Nome</b><small>Como você aparece no clube</small></div>
+          <input class="entrada" id="entrada-nome" maxlength="18">
+        </div>
+        <div class="opcao">
+          <div><b>Avatar</b><small>Escolha uma carta</small></div>
+          <div class="linha-botoes" id="lista-avatares"></div>
+        </div>
+        <div class="numeros" id="numeros-perfil" style="margin-top:16px"></div>
+      </div>
+      <div class="cartao"><h2>Seus números para o ranking</h2><div class="numeros" id="numeros-ranking"></div>
+        <p class="vazio">O ranking entre jogadores chega junto com o modo online, que precisa de servidor.
+          Estes são os números que vão para lá.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------- configurações -->
+  <section class="tela rolavel" id="tela-config">
+    <div class="folha">
+      <div class="cartao">
+        <h2>Configurações</h2>
+        <div class="opcao">
+          <div><b>Música ambiente</b><small>Acorde grave no fundo da sala</small></div>
+          <button class="chave" id="chave-musica"><i></i></button>
+        </div>
+        <div class="opcao">
+          <div><b>Efeitos sonoros</b><small>Cartas, fichas e resultados</small></div>
+          <button class="chave" id="chave-efeitos"><i></i></button>
+        </div>
+        <div class="opcao">
+          <div><b>Tutorial</b><small>Rever as regras básicas do jogo</small></div>
+          <button class="botao discreto" id="btn-tutorial">VER DE NOVO</button>
+        </div>
+        <div class="opcao">
+          <div><b>Recomeçar</b><small>Apaga perfil, saldo, XP e histórico deste navegador</small></div>
+          <button class="botao vermelho discreto" id="btn-zerar">APAGAR TUDO</button>
+        </div>
+      </div>
+      <div class="cartao">
+        <h2>Sobre</h2>
+        <p class="vazio">BlackJack Club — modo carreira. 6 baralhos, Blackjack paga 3:2, dealer para no 17
+          inclusive macio, late surrender e seguro 2:1. As fichas são virtuais e não têm nenhum valor
+          fora do jogo.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="anuncio"><b></b><span></span></div>
+<div id="torradas"></div>
+
+<div class="fundo-modal" id="modal">
+  <div class="modal">
+    <h2 id="modal-titulo"></h2>
+    <div id="modal-corpo"></div>
+    <div class="rodape" id="modal-rodape"></div>
+  </div>
+</div>
+
+<script type="module" src="./src/ui/app.js"></script>
+</body>
+</html>
