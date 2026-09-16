@@ -11,6 +11,7 @@ import { abrirMesa, atualizarSaldoDaMesa, emRodada, linhaHistorico, prepararMesa
 import {
   abrirAmigos, desligarSala, entrarPorLink, naSala, prepararSalas, sairDaSala,
 } from './salas.js';
+import { abrirTutorial, prepararTutorial } from './tutorial.js';
 import { acordarAudio, configurarSom, som } from './som.js';
 
 const $ = (id) => document.getElementById(id);
@@ -35,6 +36,7 @@ const TELAS = {
   missoes: 'tela-missoes',
   estatisticas: 'tela-estatisticas',
   perfil: 'tela-perfil',
+  tutorial: 'tela-tutorial',
   config: 'tela-config',
 };
 
@@ -151,6 +153,7 @@ const ITENS_MENU = [
   { id: 'ranking', icone: '🏆', titulo: 'RANKING', sub: 'Seus números do clube', acao: () => ir('perfil') },
   { id: 'perfil', icone: '👤', titulo: 'PERFIL', sub: 'Nome, avatar e conquistas', acao: () => ir('perfil') },
   { id: 'stats', icone: '📊', titulo: 'ESTATÍSTICAS', sub: 'Números e histórico', acao: () => ir('estatisticas') },
+  { id: 'tutorial', icone: '🎓', titulo: 'COMO SE JOGA', sub: 'Regras, contas e um teste', acao: () => abrirTutorial() },
   { id: 'loja', icone: '🛍️', titulo: 'LOJA', sub: 'Cosméticos do clube', selo: 'em breve', acao: () => modal(
       'Loja',
       `<p>A loja é só cosmética: baralhos, mesas, fichas, molduras e efeitos. Nada nela muda
@@ -205,7 +208,14 @@ function pintarMesas() {
       salvar(perfil);
       abrirMesa(mesa);
       forcarIr('jogo');
-      if (!perfil.tutorialVisto) mostrarTutorial();
+      if (!perfil.tutorialVisto) {
+        perfil.tutorialVisto = true;
+        salvar(perfil);
+        modal('Primeira vez?',
+          `<p>O tutorial mostra as cartas, as jogadas, como o dealer joga e as contas de
+            pagamento — e termina com um teste rápido.</p>`,
+          [{ texto: 'AGORA NÃO' }, { texto: 'VER TUTORIAL', classe: 'ouro', acao: () => abrirTutorial() }]);
+      }
     };
     caixa.append(b);
   }
@@ -360,42 +370,11 @@ function pintarConfig() {
     pintarConfig();
   };
 
-  $('btn-tutorial').onclick = () => { som.botao(); mostrarTutorial(); };
+  $('btn-tutorial').onclick = () => { som.botao(); abrirTutorial(); };
   $('btn-zerar').onclick = () => perguntar(
     'Apagar tudo?',
     'Saldo, nível, XP, missões, conquistas e histórico deste navegador somem para sempre.',
     () => { apagar(); location.reload(); },
-  );
-}
-
-// --------------------------------------------------------------- tutorial
-
-const PASSOS = [
-  ['Valor das cartas', 'De 2 a 10 valem o próprio número. Valete, Dama e Rei valem 10. O Ás vale 11 ou 1, o que for melhor para você.'],
-  ['O objetivo', 'Chegar mais perto de 21 do que o dealer, sem passar. Passou de 21, a mão estourou e perde na hora.'],
-  ['Pedir e parar', 'PEDIR traz mais uma carta. PARAR encerra sua mão e passa a vez para o dealer, que compra até 17.'],
-  ['Dobrar', 'Só nas duas primeiras cartas: dobra a aposta, você recebe exatamente uma carta e a mão para.'],
-  ['Dividir', 'Com duas cartas de mesmo valor, vira duas mãos, cada uma com a sua aposta. Áses divididos recebem uma carta só.'],
-  ['Blackjack', 'Ás com uma carta de 10 nas duas primeiras cartas paga 3:2. Mil vira dois mil e quinhentos.'],
-];
-
-function mostrarTutorial(indice = 0) {
-  const [titulo, texto] = PASSOS[indice];
-  const ultimo = indice === PASSOS.length - 1;
-  modal(
-    `${titulo}  (${indice + 1}/${PASSOS.length})`,
-    `<p>${texto}</p>`,
-    [
-      ...(indice > 0 ? [{ texto: 'VOLTAR', acao: () => mostrarTutorial(indice - 1) }] : []),
-      {
-        texto: ultimo ? 'JOGAR' : 'PRÓXIMO',
-        classe: 'ouro',
-        acao: () => {
-          if (ultimo) { perfil.tutorialVisto = true; salvar(perfil); }
-          else mostrarTutorial(indice + 1);
-        },
-      },
-    ],
   );
 }
 
@@ -410,6 +389,11 @@ prepararMesa({
 });
 
 prepararSalas({ perfil, torrada, anuncio, modal, irPara: forcarIr, atualizarTopo });
+
+prepararTutorial({
+  irPara: forcarIr,
+  jogar: () => { perfil.tutorialVisto = true; salvar(perfil); ir('mesas'); },
+});
 
 configurarSom(perfil.som);
 document.addEventListener('pointerdown', () => acordarAudio(perfil.som), { once: true });

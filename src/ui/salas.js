@@ -438,6 +438,8 @@ function pintarMesa() {
     ? `Rodada ${visao.rodada}/${visao.limiteRodadas}`
     : `Rodada ${visao.rodada}`;
   $('sala-codigo-mesa').textContent = visao.codigo;
+  $('texto-limites').textContent =
+    `APOSTA DE ${fmt(visao.config.apostaMin)} A ${fmt(visao.config.apostaMax)}`;
 
   const caixaDealer = $('sala-cartas-dealer');
   caixaDealer.innerHTML = '';

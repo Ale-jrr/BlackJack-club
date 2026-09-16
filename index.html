@@ -133,6 +133,21 @@
     </div>
   </section>
 
+  <!-- -------------------------------------------------------- tutorial -->
+  <section class="tela rolavel" id="tela-tutorial">
+    <div class="folha">
+      <div class="cartao">
+        <h2>Como se joga</h2>
+        <div class="abas" id="tutorial-abas"></div>
+      </div>
+      <div class="cartao" id="tutorial-conteudo"></div>
+      <div class="linha-botoes">
+        <button class="botao discreto" id="btn-tutorial-anterior">ANTERIOR</button>
+        <button class="botao ouro" id="btn-tutorial-proximo">PR&#211;XIMO</button>
+      </div>
+    </div>
+  </section>
+
   <!-- --------------------------------------------------- configurações -->
   <section class="tela rolavel" id="tela-config">
     <div class="folha">
@@ -252,9 +267,11 @@
                 BLACKJACK PAGA 3 PARA 2
               </textPath>
             </text>
+            <!-- Nada de regra do dealer aqui: no feltro fica o que interessa a
+                 quem aposta. A regra do dealer mora no tutorial. -->
             <text class="texto-mesa media">
-              <textPath href="#arco-baixo" startOffset="50%" text-anchor="middle">
-                O dealer compra at&#233; 16 e para em todos os 17
+              <textPath href="#arco-baixo" startOffset="50%" text-anchor="middle" id="texto-limites">
+                APOSTA DE 500 A 5.000
               </textPath>
             </text>
           </svg>

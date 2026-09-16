@@ -36,6 +36,7 @@ para testar sem precisar de outra pessoa.
 | saldo, estatísticas, histórico, o que é salvo | `src/dados/perfil.js` |
 | mesa, cartas na tela, animação, botões | `src/ui/mesa.js` |
 | menu e as outras telas | `src/ui/app.js` |
+| tutorial: capítulos, treino e teste | `src/ui/tutorial.js` |
 | regras da sala online, turno, ranking | `src/motor/sala.js` |
 | telas de criar sala, lobby e mesa online | `src/ui/salas.js` |
 | conversa com o servidor e tempo real | `src/dados/servidor.js` |
@@ -53,6 +54,10 @@ rodar esse mesmo motor no servidor, e qualquer regra que vazar para a tela vira 
 **Todo número de regra mora em `regras.js`.** Pagamento 3:2, seis baralhos, corte em 75%, limites
 das mesas, saldo inicial. Espalhar número de balanço pelo código é o jeito mais rápido de o jogo
 divergir de si mesmo.
+
+**No feltro não vai regra do dealer.** A mesa mostra o que interessa a quem aposta: o
+pagamento do Blackjack e os limites da sala. Como o dealer joga está no tutorial, onde a
+pessoa vai procurar.
 
 **As cartas não olham o jogador.** O embaralhamento não sabe saldo, nível nem sequência. Existe
 teste garantindo que duas partidas com a mesma semente dão as mesmas cartas com saldos diferentes.
@@ -103,7 +108,10 @@ Fases 1 a 4 do projeto, mais as mesas por nível da Fase 5:
   seguro 2:1, dealer parando no 17 inclusive macio, espiada quando a carta aberta é Ás ou 10.
 - Saldo virtual, aposta com fichas, repetir e dobrar aposta, bônus de recuperação.
 - XP, 100 níveis, missões diárias e semanais, conquistas, bônus diário de 7 dias.
-- Estatísticas, histórico das rodadas, perfil com nome e avatar, tutorial, som.
+- Estatísticas, histórico das rodadas, perfil com nome e avatar, som.
+- **Tutorial em oito capítulos** com cartas de verdade, mão que muda de valor ao toque,
+  calculadora de pagamento, os três jeitos de calcular o 3 para 2 que crupiê aprende, treino
+  dessa conta e um teste de cinco perguntas no fim.
 - Seis mesas desbloqueando por nível.
 - **Modo jogar com amigos**: criar sala com as regras do ADM, código de convite e link,
   lobby com pronto e nome editável, até 10 jogadores, aposta com prazo, jogada **um por vez**
