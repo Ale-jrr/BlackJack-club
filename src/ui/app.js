@@ -8,6 +8,9 @@ import {
   resgatarBonus, resgatarRecuperacao, salvar, winRate,
 } from '../dados/perfil.js';
 import { abrirMesa, atualizarSaldoDaMesa, emRodada, linhaHistorico, prepararMesa } from './mesa.js';
+import {
+  abrirAmigos, desligarSala, entrarPorLink, naSala, prepararSalas, sairDaSala,
+} from './salas.js';
 import { acordarAudio, configurarSom, som } from './som.js';
 
 const $ = (id) => document.getElementById(id);
@@ -26,6 +29,9 @@ const TELAS = {
   menu: 'tela-menu',
   jogo: 'tela-jogo',
   mesas: 'tela-mesas',
+  amigos: 'tela-amigos',
+  criar: 'tela-criar',
+  sala: 'tela-sala',
   missoes: 'tela-missoes',
   estatisticas: 'tela-estatisticas',
   perfil: 'tela-perfil',
@@ -35,6 +41,13 @@ const TELAS = {
 function ir(nome) {
   if (telaAtual === 'jogo' && nome !== 'jogo' && emRodada()) {
     perguntar('Sair da rodada?', 'A rodada em andamento fica para trás e a aposta já feita é perdida.', () => {
+      forcarIr(nome);
+    });
+    return;
+  }
+  if (telaAtual === 'sala' && nome !== 'sala' && naSala()) {
+    perguntar('Sair da sala?', 'Sua vaga é liberada e as fichas daquela mesa ficam para trás.', async () => {
+      await sairDaSala();
       forcarIr(nome);
     });
     return;
@@ -57,7 +70,12 @@ function forcarIr(nome) {
   window.scrollTo(0, 0);
 }
 
-$('btn-voltar').onclick = () => { som.botao(); ir(telaAtual === 'jogo' ? 'mesas' : 'menu'); };
+$('btn-voltar').onclick = () => {
+  som.botao();
+  if (telaAtual === 'jogo') return ir('mesas');
+  if (telaAtual === 'criar') return ir('amigos');
+  ir('menu');
+};
 
 // -------------------------------------------------------------------- topo
 
@@ -127,14 +145,8 @@ function perguntar(titulo, texto, aoConfirmar) {
 
 const ITENS_MENU = [
   { id: 'jogar', icone: '🃏', titulo: 'JOGAR', sub: 'Modo carreira contra o dealer', destaque: true, acao: () => ir('mesas') },
-  { id: 'amigos', icone: '👥', titulo: 'JOGAR COM AMIGOS', sub: 'Salas de até 10 jogadores', selo: 'em breve', acao: () => modal(
-      'Jogar com amigos',
-      `<p>As salas online precisam de um servidor decidindo cartas, saldo e tempo para ninguém
-        conseguir mexer no resultado pelo navegador. Ainda não existe servidor, então o modo está
-        fora desta versão.</p>
-       <p>O que já está pronto para ele: o motor da rodada, que é o mesmo que vai rodar do lado
-        do servidor, e o cálculo de resultado por jogador.</p>`,
-      [{ texto: 'ENTENDI', classe: 'ouro' }]) },
+  { id: 'amigos', icone: '👥', titulo: 'JOGAR COM AMIGOS', sub: 'Salas de até 10 jogadores',
+    acao: () => abrirAmigos() },
   { id: 'missoes', icone: '🎯', titulo: 'MISSÕES', sub: 'Diárias, semanais e bônus', acao: () => ir('missoes') },
   { id: 'ranking', icone: '🏆', titulo: 'RANKING', sub: 'Seus números do clube', acao: () => ir('perfil') },
   { id: 'perfil', icone: '👤', titulo: 'PERFIL', sub: 'Nome, avatar e conquistas', acao: () => ir('perfil') },
@@ -397,11 +409,16 @@ prepararMesa({
   aoTerminarRodada: () => { if (telaAtual === 'jogo') { /* a lateral se repinta sozinha */ } },
 });
 
+prepararSalas({ perfil, torrada, anuncio, modal, irPara: forcarIr });
+
 configurarSom(perfil.som);
 document.addEventListener('pointerdown', () => acordarAudio(perfil.som), { once: true });
 
 atualizarTopo();
 forcarIr('menu');
 
+// Link de convite abre direto na sala (§49).
+entrarPorLink().catch(() => { /* código velho ou sala fechada: fica no menu */ });
+
 // Guarda o perfil ao sair, caso a última rodada tenha mexido em algo.
-window.addEventListener('pagehide', () => salvar(perfil));
+window.addEventListener('pagehide', () => { salvar(perfil); desligarSala(); });

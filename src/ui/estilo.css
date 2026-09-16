@@ -24,6 +24,11 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+/* Regra de ouro: `hidden` esconde mesmo. Sem isto, qualquer `display: grid`
+   escrito depois vence o atributo e o elemento continua na tela — foi assim
+   que o lobby ficou aparecendo por cima da mesa. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   height: 100%;
@@ -538,3 +543,119 @@ main { height: calc(100% - var(--topo)); overflow: hidden; }
 }
 
 .vazio { color: var(--cinza); font-size: 13.5px; padding: 12px 2px; }
+
+/* ------------------------------------------------- jogar com amigos */
+
+.codigo-grande {
+  font-size: clamp(20px, 4vw, 28px); font-weight: 800; letter-spacing: 6px;
+  text-align: center; text-transform: uppercase; width: min(220px, 60vw);
+}
+
+.convite {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  background: rgba(217,180,91,.09); border: 1px solid rgba(217,180,91,.35);
+  border-radius: 14px; padding: 14px 18px;
+}
+.convite .rot { font-size: 11px; letter-spacing: 2px; color: var(--cinza); }
+.codigo-sala {
+  font-size: clamp(26px, 5vw, 38px); font-weight: 800; letter-spacing: 8px; color: var(--ouro-forte);
+}
+
+.linha-campo { display: grid; gap: 6px; margin-bottom: 14px; }
+.linha-campo > span { font-size: 13px; color: var(--cinza); }
+.linha-campo .entrada { width: 100%; }
+.dupla { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.atalhos { display: flex; gap: 8px; flex-wrap: wrap; margin: -6px 0 16px; }
+.atalhos .botao { min-height: 36px; min-width: 0; padding: 0 12px; font-size: 12.5px; }
+
+select.entrada { appearance: none; cursor: pointer; }
+select.entrada option { background: #10161a; }
+
+/* --------------------------------------------------------- mesa online */
+
+.mesa-online { display: grid; gap: 18px; grid-template-columns: 1fr; min-height: 100%; }
+.mesa-online .mesa { min-height: 0; grid-template-rows: auto auto 1fr auto; border-radius: 0; }
+.mesa-online .lateral { display: none; }
+
+/* A mesa ocupa a altura inteira da tela: na sua vez, os botões não podem estar
+   abaixo da dobra. Por isso esta tela perde o padding quando mostra a mesa. */
+#tela-sala:has(#sala-mesa:not([hidden])) { padding: 0; }
+@media (min-width: 1100px) {
+  #tela-sala:has(#sala-mesa:not([hidden])) { padding: 18px; }
+  .mesa-online { grid-template-columns: minmax(0, 1fr) 330px; height: 100%; }
+  .mesa-online .mesa { border-radius: clamp(18px, 3vw, 34px); }
+  .mesa-online .lateral { display: grid; min-height: 0; }
+}
+
+.topo-sala {
+  display: flex; justify-content: space-between; gap: 10px; z-index: 3;
+}
+.topo-sala .etiqueta { background: rgba(7,9,10,.55); }
+
+.faixa-outros { display: grid; align-content: center; min-height: 0; overflow-y: auto; z-index: 2; }
+.outros {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  overflow-x: auto; padding: 4px 2px;
+}
+
+.jogador-mesa {
+  min-width: 132px; max-width: 190px;
+  background: rgba(7,9,10,.42); border: 1px solid rgba(242,238,227,.12);
+  border-radius: 12px; padding: 9px 11px;
+}
+.jogador-mesa.na-vez { border-color: var(--ouro); background: rgba(217,180,91,.14); }
+.jogador-mesa.fora { opacity: .5; }
+.jogador-mesa .cabeca { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.jogador-mesa .cabeca b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jogador-mesa .av { font-size: 17px; }
+.jogador-mesa .agora {
+  font-size: 9.5px; font-weight: 800; letter-spacing: .5px; color: var(--preto);
+  background: var(--ouro); border-radius: 999px; padding: 1px 6px; white-space: nowrap;
+}
+.jogador-mesa .agora.fora { background: var(--vermelho); color: #fff; }
+.fichas-jogador {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 12px; color: var(--ouro-forte); margin-top: 4px;
+}
+.fichas-jogador .aposta-na-mesa { font-size: 10.5px; padding: 1px 7px; }
+
+.minis { display: grid; gap: 4px; margin-top: 6px; }
+.mini-mao { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+.mini-carta {
+  background: #f4efe2; color: #16191c; border-radius: 4px;
+  font-size: 11.5px; font-weight: 800; padding: 2px 5px; line-height: 1.2;
+}
+.mini-carta.vermelha { color: #c0392b; }
+.mini-valor { font-size: 11px; color: var(--cinza); margin-left: 2px; }
+.mini-mao.win .mini-valor { color: var(--verde); }
+.mini-mao.lose .mini-valor { color: var(--vermelho); }
+.mini-mao.push .mini-valor { color: var(--azul); }
+
+.relogio {
+  position: relative; width: min(320px, 80%); height: 26px;
+  background: rgba(7,9,10,.6); border: 1px solid rgba(242,238,227,.2);
+  border-radius: 999px; overflow: hidden; display: grid; place-items: center;
+}
+.relogio i {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, rgba(94,214,143,.5), rgba(94,214,143,.25));
+  transition: width .25s linear;
+}
+.relogio b { position: relative; font-size: 12.5px; letter-spacing: 1px; }
+.relogio.minha i { background: linear-gradient(90deg, rgba(217,180,91,.6), rgba(217,180,91,.3)); }
+.relogio.acabando i { background: linear-gradient(90deg, rgba(229,90,90,.6), rgba(229,90,90,.3)); }
+.relogio.acabando b { color: var(--vermelho); }
+
+.linha-rank {
+  display: grid; grid-template-columns: 34px 1fr auto auto; gap: 8px; align-items: center;
+  padding: 8px 10px; border-radius: 10px; font-size: 13px;
+  background: rgba(255,255,255,.035);
+}
+.linha-rank + .linha-rank { margin-top: 6px; }
+.linha-rank.eu { border: 1px solid var(--ouro); background: rgba(217,180,91,.1); }
+.linha-rank .pos { color: var(--ouro-forte); font-weight: 800; }
+.linha-rank .nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.linha-rank .fichas { font-weight: 700; }
+.linha-rank .lucro { font-size: 11.5px; color: var(--cinza); min-width: 54px; text-align: right; }
+.linha-rank .lucro.mais { color: var(--verde); }
+.linha-rank .lucro.menos { color: var(--vermelho); }

@@ -13,12 +13,12 @@ import { xpDaRodada, xpDoNivel } from '../src/dados/progressao.js';
 const casos = [];
 export function teste(nome, fn) { casos.push({ nome, fn }); }
 
-function igual(obtido, esperado, oque = '') {
+export function igual(obtido, esperado, oque = '') {
   const a = JSON.stringify(obtido);
   const b = JSON.stringify(esperado);
   if (a !== b) throw new Error(`${oque || 'valor'}: obtido ${a}, esperado ${b}`);
 }
-function verdade(cond, oque) { if (!cond) throw new Error(`falhou: ${oque}`); }
+export function verdade(cond, oque) { if (!cond) throw new Error(`falhou: ${oque}`); }
 
 // Monta um jogo com as cartas na ordem exata em que serão dadas.
 // Ordem da distribuição: jogador, dealer, jogador, dealer.

@@ -15,6 +15,15 @@ módulos ES precisam de `http://`.
 Os testes ficam em `http://localhost:5180/testes/index.html`. Rodam no navegador porque esta
 máquina não tem Node.
 
+O servidor das salas tem teste próprio, que fala com a função publicada de verdade:
+
+```bash
+py testes/servidor.py
+```
+
+E `py testes/parceiro.py auto CODIGO 500` põe um segundo jogador de mentira na sua sala,
+para testar sem precisar de outra pessoa.
+
 ## Onde mexer
 
 | Quero mudar | Arquivo |
@@ -27,6 +36,10 @@ máquina não tem Node.
 | saldo, estatísticas, histórico, o que é salvo | `src/dados/perfil.js` |
 | mesa, cartas na tela, animação, botões | `src/ui/mesa.js` |
 | menu e as outras telas | `src/ui/app.js` |
+| regras da sala online, turno, ranking | `src/motor/sala.js` |
+| telas de criar sala, lobby e mesa online | `src/ui/salas.js` |
+| conversa com o servidor e tempo real | `src/dados/servidor.js` |
+| o servidor em si | `servidor/sala/index.ts` |
 | cores, tamanhos, layout | `src/ui/estilo.css` |
 | sons | `src/ui/som.js` |
 
@@ -47,6 +60,41 @@ teste garantindo que duas partidas com a mesma semente dão as mesmas cartas com
 **Teste novo para regra nova.** `testes/testes.js` cobre Ás, Blackjack, pagamentos, dealer no
 soft 17, split, split de Áses, double, surrender, seguro e o fechamento do saldo em cem rodadas.
 
+## O modo online
+
+O site continua estático na Vercel. O servidor das salas é uma Edge Function no Supabase,
+e o banco guarda o estado de cada sala.
+
+```
+navegador  --POST-->  Edge Function `sala`  --SQL-->  tabela sala (RLS, sem policy)
+    ^                        |
+    +------ Realtime --------+   (o servidor avisa a mesa toda a cada mudança)
+```
+
+**O navegador nunca decide nada** (§74). Ele manda `apostar`, `agir`, `iniciar`, e recebe de
+volta só o que pode ver: `visaoPara()` corta o shoe e a carta escondida do dealer antes de
+responder. As tabelas estão com RLS ligado e **sem nenhuma policy**, então a chave pública do
+site não lê nem escreve nada — quem toca no banco é a função, com a chave de serviço. Existe
+teste provando isso em `testes/servidor.py`.
+
+**Cada jogador guarda um segredo** no próprio navegador (`blackjack-club:identidade:v1`). Toda
+ação vai com ele; sem isso bastaria saber o id de alguém para jogar no lugar da pessoa.
+
+**O tempo é do servidor.** O cliente só desenha o cronômetro; quem decide que o prazo venceu é
+a função, comparando com o relógio dela. Qualquer cliente pode mandar `tique`, e é isso que
+impede uma sala de travar quando alguém some no meio da vez. Tempo esgotado é sempre PARAR,
+nunca PEDIR (§56).
+
+**Duas pessoas agindo no mesmo instante** não se atropelam: a gravação só vale se a versão da
+sala ainda for a que foi lida, e quem perder a corrida relê e refaz.
+
+### Republicar o servidor
+
+O motor vai junto com a função, em `motor/`. Depois de mexer em `src/motor/`, a função precisa
+ser publicada de novo com os arquivos atualizados — senão o servidor fica com a regra velha e o
+jogo solo com a nova. O deploy é feito pelo MCP do Supabase (projeto `blackjack-club`,
+função `sala`), sem precisar da CLI.
+
 ## O que está pronto
 
 Fases 1 a 4 do projeto, mais as mesas por nível da Fase 5:
@@ -57,16 +105,20 @@ Fases 1 a 4 do projeto, mais as mesas por nível da Fase 5:
 - XP, 100 níveis, missões diárias e semanais, conquistas, bônus diário de 7 dias.
 - Estatísticas, histórico das rodadas, perfil com nome e avatar, tutorial, som.
 - Seis mesas desbloqueando por nível.
+- **Modo jogar com amigos**: criar sala com as regras do ADM, código de convite e link,
+  lobby com pronto, até 10 jogadores, aposta com prazo, jogada **um por vez** com cronômetro,
+  dealer compartilhado, ranking da sala, campeão, recompra, espectadores, reconexão.
 - Interface de cassino que funciona no toque; no celular o miolo da mesa vira painel de números.
 
 ## O que falta
 
-- **Modo online** (Fases 6 a 8): salas, código de convite, até 10 jogadores, chat, reações.
-  Precisa de servidor com WebSocket — o navegador não pode decidir resultado. O motor de rodada
-  já está pronto para rodar do lado do servidor.
-- **Ranking entre jogadores**: depende do mesmo servidor. A tela de perfil já mostra os números
-  que vão para ele.
-- **Loja de cosméticos** e **conta com login**.
+- **Chat e reações na sala** (Fase 8). A sala já tem o caminho pronto: seria mais um campo no
+  estado e mais um tipo de ação.
+- **Seguro na sala**. No modo online a rodada vai direto para a vez do primeiro jogador; o
+  seguro existe só na carreira. Entrar com ele significa uma fase a mais antes da espiada.
+- **Ranking entre jogadores** (o de dentro da sala já existe) e **conta com login**, para o
+  perfil seguir a pessoa de um aparelho para outro.
+- **Loja de cosméticos**.
 
 ## Fichas
 

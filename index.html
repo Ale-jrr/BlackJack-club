@@ -163,6 +163,112 @@
       </div>
     </div>
   </section>
+
+  <!-- ------------------------------------------------ jogar com amigos -->
+  <section class="tela rolavel" id="tela-amigos">
+    <div class="folha">
+      <div class="grade-cartoes">
+        <div class="cartao">
+          <h2>Criar sala</h2>
+          <p class="vazio">Você define fichas iniciais, apostas, rodadas e tempo. Quem entrar
+            joga com as fichas da sala, separadas da sua carreira.</p>
+          <button class="botao ouro largo" id="btn-criar-sala" style="margin-top:14px">CRIAR SALA</button>
+        </div>
+        <div class="cartao">
+          <h2>Entrar com código</h2>
+          <p class="vazio">Seis letras e números, do jeito que o dono da mesa passou.</p>
+          <div class="linha-botoes" style="margin-top:14px; justify-content:flex-start">
+            <input class="entrada codigo-grande" id="entrada-codigo" placeholder="BX72K9" maxlength="6"
+              autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <button class="botao verde" id="btn-entrar-codigo">ENTRAR</button>
+          </div>
+        </div>
+      </div>
+      <div class="cartao">
+        <h2>Salas públicas</h2>
+        <div id="salas-publicas"><div class="vazio">Procurando...</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------ criar sala -->
+  <section class="tela rolavel" id="tela-criar">
+    <div class="folha">
+      <div class="cartao">
+        <h2>Regras da sala</h2>
+        <div id="campos-criar"></div>
+        <div class="linha-botoes" style="margin-top:18px">
+          <button class="botao ouro largo" id="btn-confirmar-criar">ABRIR A MESA</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------- sala viva -->
+  <section class="tela rolavel" id="tela-sala">
+    <div class="folha" id="sala-lobby">
+      <div class="cartao">
+        <h2 id="lobby-nome">Sala</h2>
+        <div class="convite">
+          <div>
+            <span class="rot">CÓDIGO DA SALA</span>
+            <div class="codigo-sala" id="lobby-codigo">------</div>
+          </div>
+          <button class="botao discreto" id="btn-copiar-link">COPIAR CONVITE</button>
+        </div>
+        <div class="numeros" id="lobby-regras" style="margin-top:16px"></div>
+      </div>
+      <div class="cartao">
+        <h2>Jogadores</h2>
+        <div id="lobby-jogadores"></div>
+        <div class="linha-botoes" style="margin-top:16px">
+          <button class="botao verde" id="btn-pronto">ESTOU PRONTO</button>
+          <button class="botao ouro" id="btn-iniciar-partida" hidden>INICIAR PARTIDA</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mesa-online" id="sala-mesa" hidden>
+      <div class="mesa" id="mesa-sala">
+        <div class="topo-sala">
+          <span class="etiqueta" id="sala-rodada">Rodada</span>
+          <span class="etiqueta">Sala <b id="sala-codigo-mesa"></b></span>
+        </div>
+
+        <div class="lado">
+          <div class="rotulo">Dealer <span id="sala-valor-dealer"></span></div>
+          <div class="maos"><div class="mao"><div class="cartas" id="sala-cartas-dealer"></div></div></div>
+        </div>
+
+        <div class="faixa-outros"><div class="outros" id="sala-outros"></div></div>
+
+        <div class="lado">
+          <div class="maos" id="sala-minhas-maos"></div>
+          <div class="controles">
+            <div class="relogio" id="sala-relogio" hidden></div>
+            <div class="caixa-aposta">
+              <span class="rot">SUAS FICHAS</span>
+              <span class="vlr" id="sala-minhas-fichas">0</span>
+            </div>
+            <div class="linha-botoes" id="sala-fichas"></div>
+            <div class="linha-botoes" id="sala-acoes"></div>
+            <div class="dica" id="sala-dica"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="lateral">
+        <div class="cartao" style="grid-template-rows:auto auto">
+          <h2>Ranking da sala</h2>
+          <div id="sala-ranking"></div>
+        </div>
+        <div class="cartao">
+          <h2>Rodadas</h2>
+          <div class="lista-rolagem" id="sala-historico"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
 </main>
 
 <div id="anuncio"><b></b><span></span></div>

@@ -16,11 +16,12 @@
 </style>
 </head>
 <body>
-<h1>BlackJack Club — testes do motor</h1>
+<h1>BlackJack Club — testes do motor e da sala</h1>
 <div id="resumo">rodando…</div>
 <ul id="lista"></ul>
 <script type="module">
   import { rodar } from './testes.js';
+  import './testes-sala.js';
   const resultados = await rodar();
   const falhas = resultados.filter(r => !r.ok);
   document.getElementById('resumo').innerHTML = falhas.length
