@@ -25,6 +25,7 @@ let desassinar = null;
 let relogio = null;
 let ocupado = false;
 let statusAnterior = null;
+let rolouParaAcoes = false;
 let rodadaAnterior = 0;
 
 export function prepararSalas(contexto) {
@@ -339,6 +340,14 @@ export function pintar() {
   $('sala-mesa').hidden = lobby;
   if (lobby) pintarLobby(); else pintarMesa();
   pintarRelogio();
+
+  // Numa tela baixa a mesa rola. Quando chega a sua vez, os botões vêm até você
+  // em vez de ficarem escondidos embaixo.
+  if (!lobby && minhasAcoes().length > 0 && !rolouParaAcoes) {
+    rolouParaAcoes = true;
+    $('sala-acoes').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  if (minhasAcoes().length === 0) rolouParaAcoes = false;
 }
 
 function escapar(texto) {
@@ -427,6 +436,19 @@ function pintarMesa() {
   pintarOutros();
   pintarMinhaArea(eu);
   pintarRanking();
+
+  $('btn-ranking-celular').onclick = () => {
+    som.botao();
+    ctx.modal(`Sala ${visao.codigo}`,
+      `<div class="numeros" style="margin-bottom:14px">
+         <div class="numero"><b>${visao.rodada}${visao.limiteRodadas ? `/${visao.limiteRodadas}` : ''}</b><span>Rodada</span></div>
+         <div class="numero"><b>${fmt(visao.config.apostaMin)}</b><span>Aposta mínima</span></div>
+       </div>
+       ${$('sala-ranking').innerHTML}
+       <h2 style="margin:18px 0 10px">Rodadas</h2>
+       ${$('sala-historico').innerHTML}`,
+      [{ texto: 'FECHAR', classe: 'ouro' }]);
+  };
 }
 
 function pintarOutros() {
