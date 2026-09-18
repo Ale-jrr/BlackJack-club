@@ -757,21 +757,33 @@ function pintarLugares() {
   });
 }
 
+// A aposta da rodada é montada, não escolhida numa lista: o jogador digita o
+// valor que quiser ou soma fichas, e só então confirma. O painel é montado uma
+// vez por rodada e depois só atualizado — redesenhar a cada aviso do servidor
+// apagaria o que a pessoa está digitando.
+const FICHAS_DA_SALA = [50, 100, 500, 1000, 5000, 10000];
+let apostaMontada = 0;
+let ultimaApostaNaSala = 0;
+
+function tetoDaAposta(eu) {
+  return Math.min(visao.config.apostaMax, eu.fichas);
+}
+
 function pintarFichasDeAposta(eu) {
   const caixa = $('sala-fichas');
   const apostando = visao.status === STATUS_SALA.APOSTAS && !eu.apostaPendente
     && !eu.espectador && !eu.crupie;
-  caixa.innerHTML = '';
-  if (!apostando) return;
+  if (!apostando) {
+    caixa.innerHTML = '';
+    caixa.dataset.rodada = '';
+    return;
+  }
 
   const c = visao.config;
-  const valores = [...new Set([c.apostaMin, c.apostaMin * 2, c.apostaMin * 5, c.apostaMin * 10, c.apostaMax])]
-    .filter((v) => v >= c.apostaMin && v <= c.apostaMax && v <= eu.fichas)
-    .sort((a, b) => a - b);
-
-  if (valores.length === 0) {
+  if (tetoDaAposta(eu) < c.apostaMin) {
+    caixa.dataset.rodada = '';
     caixa.innerHTML = `<div class="dica">Suas fichas não pagam a aposta mínima de ${fmt(c.apostaMin)}.</div>`;
-    if (visao.config.permitirRecompra) {
+    if (c.permitirRecompra) {
       const b = document.createElement('button');
       b.className = 'botao ouro';
       b.textContent = 'RECOMPRAR';
@@ -782,14 +794,105 @@ function pintarFichasDeAposta(eu) {
     return;
   }
 
-  for (const valor of valores) {
-    const b = document.createElement('button');
-    b.className = 'botao';
-    b.innerHTML = `<span class="moeda"></span> ${fmt(valor)}`;
-    b.disabled = ocupado;
-    b.onclick = () => { som.ficha(); acao('apostar', { codigo: visao.codigo, valor }); };
-    caixa.append(b);
+  if (caixa.dataset.rodada !== String(visao.rodada)) {
+    caixa.dataset.rodada = String(visao.rodada);
+    // Começa com a aposta da rodada anterior, se ainda couber; senão, a mínima.
+    const anterior = ultimaApostaNaSala;
+    apostaMontada = anterior >= c.apostaMin && anterior <= tetoDaAposta(eu) ? anterior : c.apostaMin;
+    montarPainelDeAposta(caixa, eu);
   }
+  atualizarPainelDeAposta(eu);
+}
+
+function montarPainelDeAposta(caixa, eu) {
+  const teto = tetoDaAposta(eu);
+  const fichas = FICHAS_DA_SALA.filter((v) => v <= teto);
+
+  caixa.innerHTML = `
+    <div class="montar-aposta">
+      <label class="valor-da-aposta">
+        <span class="moeda"></span>
+        <input id="valor-aposta-sala" class="entrada" inputmode="numeric" autocomplete="off"
+          aria-label="Valor da aposta">
+      </label>
+      <div class="fichas fichas-da-sala">
+        ${fichas.map((v) => `<button class="ficha f${v}" data-soma="${v}">${v >= 1000 ? `${v / 1000}K` : v}</button>`).join('')}
+      </div>
+      <div class="linha-botoes atalhos-aposta">
+        <button class="botao discreto" data-atalho="limpar">LIMPAR</button>
+        <button class="botao discreto" data-atalho="minimo">MÍNIMO</button>
+        <button class="botao discreto" data-atalho="dobro">DOBRAR</button>
+        <button class="botao discreto" data-atalho="maximo">MÁXIMO</button>
+      </div>
+      <button class="botao ouro largo" id="btn-confirmar-aposta">APOSTAR</button>
+    </div>`;
+
+  const campo = $('valor-aposta-sala');
+  campo.oninput = () => {
+    const digitos = campo.value.replace(/\D/g, '').slice(0, 12);
+    campo.value = digitos;
+    apostaMontada = Number(digitos) || 0;
+    atualizarPainelDeAposta(euNaVisao(), { mexendoNoCampo: true });
+  };
+  campo.onkeydown = (e) => { if (e.key === 'Enter') $('btn-confirmar-aposta').click(); };
+
+  for (const b of caixa.querySelectorAll('[data-soma]')) {
+    b.onclick = () => {
+      som.ficha();
+      apostaMontada = Math.min(apostaMontada + Number(b.dataset.soma), tetoDaAposta(euNaVisao()));
+      atualizarPainelDeAposta(euNaVisao());
+    };
+  }
+  for (const b of caixa.querySelectorAll('[data-atalho]')) {
+    b.onclick = () => {
+      som.botao();
+      const eu = euNaVisao();
+      const c = visao.config;
+      if (b.dataset.atalho === 'limpar') apostaMontada = 0;
+      if (b.dataset.atalho === 'minimo') apostaMontada = c.apostaMin;
+      if (b.dataset.atalho === 'dobro') apostaMontada = Math.min(Math.max(apostaMontada, c.apostaMin) * 2, tetoDaAposta(eu));
+      if (b.dataset.atalho === 'maximo') apostaMontada = tetoDaAposta(eu);
+      atualizarPainelDeAposta(eu);
+    };
+  }
+
+  $('btn-confirmar-aposta').onclick = () => {
+    const eu = euNaVisao();
+    if (problemaDaAposta(eu)) return;
+    som.ficha();
+    ultimaApostaNaSala = apostaMontada;
+    acao('apostar', { codigo: visao.codigo, valor: apostaMontada });
+  };
+}
+
+function problemaDaAposta(eu) {
+  const c = visao.config;
+  if (!apostaMontada) return 'Escolha o valor';
+  if (apostaMontada < c.apostaMin) return `Mínimo ${fmt(c.apostaMin)}`;
+  if (apostaMontada > c.apostaMax) return `Máximo ${fmt(c.apostaMax)}`;
+  if (apostaMontada > eu.fichas) return 'Fichas insuficientes';
+  return null;
+}
+
+function atualizarPainelDeAposta(eu, { mexendoNoCampo = false } = {}) {
+  const campo = $('valor-aposta-sala');
+  const confirmar = $('btn-confirmar-aposta');
+  if (!campo || !confirmar || !eu) return;
+
+  // Não reescreve o campo enquanto a pessoa digita: o cursor pularia para o fim.
+  if (!mexendoNoCampo && document.activeElement !== campo) {
+    campo.value = apostaMontada ? String(apostaMontada) : '';
+  }
+
+  const teto = tetoDaAposta(eu);
+  for (const b of document.querySelectorAll('#sala-fichas [data-soma]')) {
+    b.disabled = ocupado || apostaMontada + Number(b.dataset.soma) > teto;
+  }
+  for (const b of document.querySelectorAll('#sala-fichas [data-atalho]')) b.disabled = ocupado;
+
+  const problema = problemaDaAposta(eu);
+  confirmar.disabled = ocupado || Boolean(problema);
+  confirmar.textContent = problema ? problema.toUpperCase() : `APOSTAR ${fmt(apostaMontada)}`;
 }
 
 function pintarAcoes(eu) {

@@ -929,3 +929,19 @@ select.entrada option { background: #10161a; }
   animation: pisca-vez 1.4s ease-in-out infinite;
 }
 .lugar-dealer.na-vez .rotulo { color: var(--ouro-forte); }
+
+/* ------------------------------------------------ aposta montada na sala */
+
+.montar-aposta { display: grid; gap: 10px; justify-items: center; width: min(560px, 100%); }
+.valor-da-aposta {
+  display: flex; align-items: center; gap: 10px; padding: 6px 16px;
+  background: rgba(7,9,10,.6); border: 1px solid rgba(217,180,91,.45); border-radius: 999px;
+  font-size: 22px;
+}
+.valor-da-aposta .entrada {
+  width: 9ch; border: 0; background: none; padding: 4px 0; text-align: center;
+  font-size: clamp(20px, 3vw, 26px); font-weight: 800; color: var(--ouro-forte);
+}
+.valor-da-aposta .entrada:focus { outline: none; }
+.fichas-da-sala .ficha { width: clamp(44px, 6.6vmin, 58px); height: clamp(44px, 6.6vmin, 58px); }
+.atalhos-aposta .botao { min-height: 38px; min-width: 0; padding: 0 12px; font-size: 12px; }

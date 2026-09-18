@@ -16,6 +16,11 @@ import time
 import urllib.error
 import urllib.request
 
+# O console do Windows usa cp1252 e não sabe escrever naipe (♣); sem isto o
+# script quebra ao imprimir uma carta, mesmo com a jogada já feita no servidor.
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 from servidor import CHAVE_PUBLICA, URL   # mesmo endereço e chave pública do teste
 
 JOGADOR = {'id': 'parceiro-de-teste', 'nome': 'João (teste)', 'avatar': '🂱'}
