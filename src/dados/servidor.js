@@ -100,9 +100,14 @@ export function meuId() {
 // 1. Tempo real: o servidor avisa a cada mudança, em ~0,2 s. Não gasta chamada.
 // 2. Aviso do prazo: quando a vez, a aposta ou a pausa do resultado vencem,
 //    alguém precisa pedir ao servidor para andar (ele não tem relógio próprio).
-//    Cada cliente agenda um `tique` para o instante do prazo, com um atraso
-//    sorteado: o primeiro que chega faz a mesa andar, o tempo real avisa os
-//    outros, e esses cancelam o próprio aviso.
+//    Os jogadores conectados formam uma fila, na ordem da sala: o primeiro avisa
+//    logo que o prazo vence; o segundo só avisa 2 s depois, se a mesa ainda não
+//    tiver andado, e assim por diante. Quando o primeiro faz a mesa andar, o
+//    tempo real entrega o prazo novo aos outros e eles cancelam o aviso deles.
+//
+//    Começou com um atraso sorteado entre 0,25 e 1,75 s, e o teste com dois
+//    clientes mostrou que não serve: a resposta do servidor mais o tempo real
+//    levam ~0,8 s, então os dois avisavam em quase todo prazo.
 // 3. Sonda de segurança: pergunta o estado de tempos em tempos, caso o socket
 //    tenha caído sem avisar. Com o canal de pé ela é lenta; sem canal, rápida.
 //
@@ -110,7 +115,7 @@ export function meuId() {
 // jogador parado, o que gastava a cota do mês em ~550 horas de jogo.
 const SONDA_COM_CANAL = 20000;
 const SONDA_SEM_CANAL = 4000;
-const ATRASO_DO_PRAZO = { minimo: 250, sorteio: 1500 };
+const ATRASO_DO_PRAZO = { primeiro: 250, porPosicao: 2000 };
 const RESPIRO_ENTRE_AVISOS = 1500;
 
 export function assinar(codigo, aoReceber) {
@@ -143,9 +148,16 @@ export function assinar(codigo, aoReceber) {
     if (!prazo) return;
 
     const falta = Math.max(0, prazo - agoraDoServidor());
-    const sorteio = ATRASO_DO_PRAZO.minimo + Math.random() * ATRASO_DO_PRAZO.sorteio;
+    const atraso = ATRASO_DO_PRAZO.primeiro + posicaoNaFila(visao) * ATRASO_DO_PRAZO.porPosicao;
     const respiro = Math.max(0, RESPIRO_ENTRE_AVISOS - (Date.now() - ultimoAviso));
-    alarmeDoPrazo = setTimeout(avisarPrazo, Math.max(falta + sorteio, respiro), prazo);
+    alarmeDoPrazo = setTimeout(avisarPrazo, Math.max(falta + atraso, respiro), prazo);
+  }
+
+  // 0 = primeiro da fila. Quem não aparece na lista (acabou de chegar) vai pro fim.
+  function posicaoNaFila(visao) {
+    const conectados = (visao.jogadores ?? []).filter((j) => j.conectado);
+    const i = conectados.findIndex((j) => j.id === meuId());
+    return i < 0 ? conectados.length : i;
   }
 
   async function avisarPrazo(prazo) {
