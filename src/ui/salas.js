@@ -79,18 +79,24 @@ export function abrirAmigos() {
 // ---------------------------------------------------- salas abertas, ao vivo
 
 // A mesma lista aparece na tela inicial e em "Jogar com amigos". Ela se atualiza
-// sozinha enquanto estiver na tela; escondida, não gasta requisição nenhuma.
+// sozinha enquanto estiver na tela — e só com a aba em primeiro plano: aba
+// esquecida no fundo não gasta cota do servidor. Ao voltar para a aba, atualiza
+// na hora.
 const LISTAS_DE_SALAS = ['salas-abertas-menu', 'salas-publicas'];
-const INTERVALO_DA_LISTA = 8000;
+const INTERVALO_DA_LISTA = 12000;
 let relogioDaLista = null;
 
 export function ligarListasDeSalas() {
   clearInterval(relogioDaLista);
   relogioDaLista = setInterval(atualizarListasDeSalas, INTERVALO_DA_LISTA);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) atualizarListasDeSalas();
+  });
   atualizarListasDeSalas();
 }
 
 export async function atualizarListasDeSalas() {
+  if (document.hidden) return;
   const visiveis = LISTAS_DE_SALAS.map($).filter((el) => el && el.offsetParent !== null);
   if (visiveis.length === 0) return;
   try {

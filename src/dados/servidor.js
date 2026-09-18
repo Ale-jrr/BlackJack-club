@@ -93,18 +93,72 @@ export function meuId() {
 
 // ---------------------------------------------------------------- realtime
 
-// Assina a sala no Realtime (protocolo do Phoenix, sem biblioteca) e, por
-// garantia, também pergunta o estado de tempos em tempos: se o socket cair no
-// meio de uma rodada, a mesa continua andando.
-export function assinar(codigo, aoReceber, { intervaloDeSeguranca = 4000 } = {}) {
+// Cada chamada à função do servidor gasta da cota mensal do plano grátis (500
+// mil por mês). A sala tem três jeitos de ficar em dia, do mais barato ao mais
+// caro:
+//
+// 1. Tempo real: o servidor avisa a cada mudança, em ~0,2 s. Não gasta chamada.
+// 2. Aviso do prazo: quando a vez, a aposta ou a pausa do resultado vencem,
+//    alguém precisa pedir ao servidor para andar (ele não tem relógio próprio).
+//    Cada cliente agenda um `tique` para o instante do prazo, com um atraso
+//    sorteado: o primeiro que chega faz a mesa andar, o tempo real avisa os
+//    outros, e esses cancelam o próprio aviso.
+// 3. Sonda de segurança: pergunta o estado de tempos em tempos, caso o socket
+//    tenha caído sem avisar. Com o canal de pé ela é lenta; sem canal, rápida.
+//
+// Antes eram só a 1 e uma sonda de 4 em 4 segundos: 15 chamadas por minuto por
+// jogador parado, o que gastava a cota do mês em ~550 horas de jogo.
+const SONDA_COM_CANAL = 20000;
+const SONDA_SEM_CANAL = 4000;
+const ATRASO_DO_PRAZO = { minimo: 250, sorteio: 1500 };
+const RESPIRO_ENTRE_AVISOS = 1500;
+
+export function assinar(codigo, aoReceber) {
   let socket = null;
   let batida = null;
   let sonda = null;
   let vivo = true;
   let tentativas = 0;
+  let canalConfirmado = false;
+  let ultimaSonda = Date.now();
+  let alarmeDoPrazo = null;
+  let prazoAgendado = null;
+  let ultimoAviso = 0;
 
   const topico = `realtime:sala-${codigo}`;
 
+  const entregar = (visao, origem) => {
+    agendarAvisoDoPrazo(visao);
+    aoReceber(visao, origem);
+  };
+
+  const canalDePe = () => canalConfirmado && socket?.readyState === WebSocket.OPEN;
+
+  // ------------------------------------------------- aviso do prazo (2)
+  function agendarAvisoDoPrazo(visao) {
+    const prazo = visao?.prazo ?? null;
+    if (prazo === prazoAgendado) return;            // mesmo prazo: já está agendado
+    prazoAgendado = prazo;
+    clearTimeout(alarmeDoPrazo);
+    if (!prazo) return;
+
+    const falta = Math.max(0, prazo - agoraDoServidor());
+    const sorteio = ATRASO_DO_PRAZO.minimo + Math.random() * ATRASO_DO_PRAZO.sorteio;
+    const respiro = Math.max(0, RESPIRO_ENTRE_AVISOS - (Date.now() - ultimoAviso));
+    alarmeDoPrazo = setTimeout(avisarPrazo, Math.max(falta + sorteio, respiro), prazo);
+  }
+
+  async function avisarPrazo(prazo) {
+    if (!vivo || prazoAgendado !== prazo) return;   // outro cliente já fez a mesa andar
+    ultimoAviso = Date.now();
+    prazoAgendado = null;       // se o servidor ainda não andou, a resposta reagenda
+    try {
+      const { visao } = await chamar('tique', { codigo });
+      if (visao) entregar(visao, 'prazo');
+    } catch { /* a sonda de segurança cobre */ }
+  }
+
+  // ------------------------------------------------------ tempo real (1)
   const conectar = () => {
     if (!vivo) return;
     try {
@@ -129,12 +183,16 @@ export function assinar(codigo, aoReceber, { intervaloDeSeguranca = 4000 } = {})
     socket.onmessage = (evento) => {
       let msg;
       try { msg = JSON.parse(evento.data); } catch { return; }
+      if (msg.event === 'phx_reply' && msg.topic === topico && msg.ref === '1') {
+        canalConfirmado = msg.payload?.status === 'ok';
+      }
       if (msg.event === 'broadcast' && msg.payload?.payload?.visao) {
-        aoReceber(msg.payload.payload.visao, 'realtime');
+        entregar(msg.payload.payload.visao, 'realtime');
       }
     };
 
     socket.onclose = () => {
+      canalConfirmado = false;
       clearInterval(batida);
       agendarReconexao();
     };
@@ -153,17 +211,21 @@ export function assinar(codigo, aoReceber, { intervaloDeSeguranca = 4000 } = {})
 
   conectar();
 
-  // Rede de segurança: pergunta o estado mesmo se o socket estiver mudo.
+  // ------------------------------------------------ sonda de segurança (3)
   sonda = setInterval(async () => {
     if (!vivo) return;
+    const intervalo = canalDePe() ? SONDA_COM_CANAL : SONDA_SEM_CANAL;
+    if (Date.now() - ultimaSonda < intervalo) return;
+    ultimaSonda = Date.now();
     try {
       const { visao } = await chamar('tique', { codigo });
-      if (visao) aoReceber(visao, 'sonda');
+      if (visao) entregar(visao, 'sonda');
     } catch { /* tenta de novo no próximo intervalo */ }
-  }, intervaloDeSeguranca);
+  }, SONDA_SEM_CANAL);
 
   return () => {
     vivo = false;
+    clearTimeout(alarmeDoPrazo);
     clearInterval(batida);
     clearInterval(sonda);
     try { socket?.close(); } catch { /* já foi */ }
