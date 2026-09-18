@@ -4,7 +4,7 @@
 import { cartas, criarShoeFixo, criarShoe, rngSemeado } from '../src/motor/baralho.js';
 import { ACOES, STATUS_MAO } from '../src/motor/regras.js';
 import {
-  STATUS_SALA, acoesDe, agir, ajustarConfig, apostar, campeoes, criarSala,
+  STATUS_SALA, acoesDe, agir, ajustarConfig, apostar, assumirCrupie, campeoes, criarSala,
   definirPronto, entrar, gerarCodigo, iniciar, jogadorDe, normalizarConfig,
   problemasNaConfig, ranking, recomprar, sair, tique, visaoPara,
 } from '../src/motor/sala.js';
@@ -483,4 +483,184 @@ teste('Cem rodadas seguidas sem travar e com as fichas fechando', () => {
   const totalFinal = sala.jogadores.reduce((t, j) => t + j.fichas, 0);
   verdade(totalFinal !== totalInicial || rodadas === 0, 'as fichas circularam');
   verdade(sala.shoe.indice <= sala.shoe.cartas.length, 'shoe não estourou');
+});
+
+// ---------------------------------------------------------- crupiê humano
+
+// Mayk (p1, ADM) é o crupiê; João (p2) e Pedro (p3) apostam.
+// Ordem da distribuição: p2, p3, dealer, p2, p3, dealer — o crupiê não recebe mão.
+function salaComCrupie(cartasDoShoe, { config } = {}) {
+  const sala = criarSala({
+    codigo: 'CRUP01', nome: 'Com crupiê', host: HOST, agora: 1000,
+    config: { fichasIniciais: 10000, apostaMin: 500, apostaMax: 5000, tempoTurno: 15,
+      tempoAposta: 20, limiteRodadas: 10, crupieHumano: true, ...config },
+    shoe: cartasDoShoe ? criarShoeFixo(cartas(cartasDoShoe)) : criarShoe({ rng: rngSemeado(9) }),
+  });
+  entrar(sala, { id: 'p2', nome: 'João' }, 1001);
+  entrar(sala, { id: 'p3', nome: 'Pedro' }, 1002);
+  assumirCrupie(sala, 'p1');
+  return sala;
+}
+
+function ateAVezDoCrupie(sala) {
+  iniciar(sala, 'p1', 5000);
+  apostar(sala, 'p2', 500, 5100);
+  apostar(sala, 'p3', 500, 5200);
+  agir(sala, 'p2', ACOES.PARAR, 5300);
+  agir(sala, 'p3', ACOES.PARAR, 5400);
+}
+
+teste('Crupiê humano só existe quando quem cria a sala liga a opção', () => {
+  const sala = salaCom(2);
+  igual(erroDe(() => assumirCrupie(sala, 'p2')), 'sem-crupie');
+});
+
+teste('Um crupiê por vez, e ele pode largar o lugar', () => {
+  const sala = salaComCrupie();
+  igual(sala.crupieId, 'p1', 'Mayk assumiu');
+  igual(erroDe(() => assumirCrupie(sala, 'p2')), 'crupie-ocupado', 'lugar ocupado');
+  assumirCrupie(sala, 'p1', false);
+  igual(sala.crupieId, null, 'largou');
+  assumirCrupie(sala, 'p2');
+  igual(sala.crupieId, 'p2', 'João assumiu');
+});
+
+teste('O crupiê não troca no meio da partida', () => {
+  const sala = salaComCrupie();
+  iniciar(sala, 'p1', 5000);
+  igual(erroDe(() => assumirCrupie(sala, 'p1', false)), 'fase');
+});
+
+teste('Só com o crupiê na mesa não dá para começar', () => {
+  const sala = criarSala({ codigo: 'CRUP02', nome: 'Sozinho', host: HOST, agora: 1000,
+    config: { fichasIniciais: 10000, crupieHumano: true } });
+  assumirCrupie(sala, 'p1');
+  igual(erroDe(() => iniciar(sala, 'p1', 2000)), 'sem-jogadores');
+});
+
+teste('O crupiê não aposta, e a rodada sai quando os outros apostam', () => {
+  const sala = salaComCrupie('9♥ 7♠ 10♠ 9♣ 6♦ 2♦ 3♣ 4♥');
+  iniciar(sala, 'p1', 5000);
+  igual(erroDe(() => apostar(sala, 'p1', 500, 5050)), 'crupie', 'crupiê não aposta');
+  apostar(sala, 'p2', 500, 5100);
+  apostar(sala, 'p3', 500, 5200);
+  igual(sala.status, STATUS_SALA.TURNO_JOGADORES, 'distribuiu sem esperar o crupiê');
+  igual(jogadorDe(sala, 'p1').maos.length, 0, 'crupiê sem mão');
+  igual(sala.vezDe, 'p2', 'joga primeiro quem apostou');
+});
+
+teste('Depois dos jogadores, a vez é do crupiê, com a carta virada', () => {
+  const sala = salaComCrupie('9♥ 7♠ 10♠ 9♣ 6♦ 2♦ 3♣ 4♥');
+  iniciar(sala, 'p1', 5000);
+  apostar(sala, 'p2', 500, 5100);
+  apostar(sala, 'p3', 500, 5200);
+  igual(visaoPara(sala, 'p1').dealer.cartas.length, 1, 'nem o crupiê vê a escondida antes da vez');
+  agir(sala, 'p2', ACOES.PARAR, 5300);
+  agir(sala, 'p3', ACOES.PARAR, 5400);
+  igual(sala.status, STATUS_SALA.TURNO_DEALER, 'vez do dealer');
+  igual(sala.vezDe, 'p1', 'nas mãos do crupiê');
+  verdade(sala.dealer.revelado, 'carta escondida virou');
+  igual(acoesDe(sala, 'p1'), [ACOES.PEDIR, ACOES.PARAR], 'pedir ou parar');
+  igual(acoesDe(sala, 'p2'), [], 'jogador não mexe no dealer');
+});
+
+teste('O crupiê joga livre: pode parar com 12', () => {
+  // João 18, Pedro 13, dealer 10 + 2 = 12. Parar com 12 é ruim para a casa, e é permitido.
+  const sala = salaComCrupie('9♥ 7♠ 10♠ 9♣ 6♦ 2♦');
+  ateAVezDoCrupie(sala);
+  agir(sala, 'p1', ACOES.PARAR, 5500);
+  igual(sala.status, STATUS_SALA.RESULTADO, 'rodada fechada');
+  igual(sala.historico[0].dealer, 12, 'dealer parou em 12');
+  igual(jogadorDe(sala, 'p2').fichas, 10500, 'João ganhou');
+  igual(jogadorDe(sala, 'p3').fichas, 10500, 'Pedro ganhou com 13');
+});
+
+teste('O crupiê joga livre: pode pedir com 18', () => {
+  // Dealer 10 + 8 = 18, o automático pararia. O crupiê pede, vem 2 e fica 20.
+  const sala = salaComCrupie('9♥ 7♠ 10♠ 9♣ 6♦ 8♦ 2♥');
+  ateAVezDoCrupie(sala);
+  agir(sala, 'p1', ACOES.PEDIR, 5500);
+  igual(sala.status, STATUS_SALA.TURNO_DEALER, 'continua decidindo');
+  agir(sala, 'p1', ACOES.PARAR, 5600);
+  igual(sala.historico[0].dealer, 20, 'dealer com 20');
+  igual(jogadorDe(sala, 'p2').fichas, 9500, 'João perdeu com 18');
+});
+
+teste('Crupiê que estoura fecha a rodada e paga a mesa', () => {
+  const sala = salaComCrupie('9♥ 7♠ 10♠ 9♣ 6♥ 6♦ K♣');
+  ateAVezDoCrupie(sala);
+  agir(sala, 'p1', ACOES.PEDIR, 5500);        // 16 + K = 26
+  igual(sala.status, STATUS_SALA.RESULTADO, 'fechou sozinho');
+  verdade(sala.historico[0].dealerEstourou, 'estourou');
+  igual(jogadorDe(sala, 'p2').fichas, 10500, 'João recebeu');
+  igual(jogadorDe(sala, 'p3').fichas, 10500, 'Pedro recebeu');
+});
+
+teste('Tempo do crupiê acabou: o dealer termina pela regra da casa', () => {
+  // Dealer 12 e o crupiê some. Pela regra: compra 3 (15), compra 4 (19), para.
+  const sala = salaComCrupie('9♥ 7♠ 10♠ 9♣ 6♦ 2♦ 3♣ 4♥');
+  ateAVezDoCrupie(sala);
+  tique(sala, sala.prazo + 1);
+  igual(sala.status, STATUS_SALA.RESULTADO, 'mesa andou');
+  igual(sala.historico[0].dealer, 19, 'comprou até passar de 16');
+});
+
+teste('Quem não é o crupiê não joga a vez do dealer', () => {
+  const sala = salaComCrupie('9♥ 7♠ 10♠ 9♣ 6♦ 2♦');
+  ateAVezDoCrupie(sala);
+  igual(erroDe(() => agir(sala, 'p2', ACOES.PEDIR, 5500)), 'fora-da-vez');
+});
+
+teste('Banca da casa: o crupiê não ganha, não perde e fica fora do ranking', () => {
+  const sala = salaComCrupie('9♥ 7♠ 10♠ 9♣ 6♦ 2♦');
+  ateAVezDoCrupie(sala);
+  agir(sala, 'p1', ACOES.PARAR, 5500);
+  igual(jogadorDe(sala, 'p1').fichas, 10000, 'fichas do crupiê intactas');
+  verdade(ranking(sala).every((l) => l.id !== 'p1'), 'fora do ranking');
+  igual(ranking(sala).length, 2, 'só os dois apostadores');
+});
+
+teste('Com a opção ligada e ninguém no lugar, o dealer é o automático', () => {
+  // Três apostadores aqui: baralho embaralhado, e não cartas contadas.
+  const sala = salaComCrupie();
+  assumirCrupie(sala, 'p1', false);
+  iniciar(sala, 'p1', 5000);
+  apostar(sala, 'p1', 500, 5050);
+  apostar(sala, 'p2', 500, 5100);
+  apostar(sala, 'p3', 500, 5200);
+  let guarda = 0;
+  while (sala.status === STATUS_SALA.TURNO_JOGADORES && guarda++ < 10) {
+    agir(sala, sala.vezDe, ACOES.PARAR, 5300 + guarda);
+  }
+  igual(sala.status, STATUS_SALA.RESULTADO, 'dealer jogou sozinho');
+});
+
+teste('Crupiê que sai no meio da vez dele não trava a mesa', () => {
+  const sala = salaComCrupie('9♥ 7♠ 10♠ 9♣ 6♦ 2♦ 3♣ 4♥');
+  ateAVezDoCrupie(sala);
+  sair(sala, 'p1', 5500);
+  igual(sala.status, STATUS_SALA.RESULTADO, 'rodada fechou');
+  igual(sala.historico[0].dealer, 19, 'pela regra da casa');
+  igual(sala.hostId, 'p2', 'o comando passou adiante');
+  igual(sala.crupieId, null, 'lugar vago');
+});
+
+teste('Se todo mundo estourou, o crupiê nem chega a jogar', () => {
+  // João 16 + K, Pedro 15 + Q: os dois estouram.
+  const sala = salaComCrupie('10♥ 10♣ 9♠ 6♣ 5♦ 7♦ K♥ Q♦');
+  iniciar(sala, 'p1', 5000);
+  apostar(sala, 'p2', 500, 5100);
+  apostar(sala, 'p3', 500, 5200);
+  agir(sala, 'p2', ACOES.PEDIR, 5300);
+  agir(sala, 'p3', ACOES.PEDIR, 5400);
+  igual(sala.status, STATUS_SALA.RESULTADO, 'direto para o resultado');
+  igual(sala.dealer.cartas.length, 2, 'dealer não comprou');
+});
+
+teste('A visão diz quem é o crupiê', () => {
+  const sala = salaComCrupie();
+  const visao = visaoPara(sala, 'p2');
+  igual(visao.crupieId, 'p1');
+  igual(visao.jogadores.find((j) => j.id === 'p1').crupie, true);
+  igual(visao.jogadores.find((j) => j.id === 'p2').crupie, false);
 });

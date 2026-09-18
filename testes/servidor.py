@@ -204,6 +204,49 @@ def main():
     lista = chamar({'acao': 'publicas'}).get('salas', [])
     checar(all(s['codigo'] != trancada for s in lista), 'A sala do teste some da lista ao esvaziar')
 
+    # ---------------------------------------------------------- crupiê humano
+    r = chamar({**MAYK, 'acao': 'criar', 'nome': 'Mesa com crupiê', 'config': {
+        'crupieHumano': True, 'fichasIniciais': 10000, 'apostaMin': 500, 'apostaMax': 5000,
+        'limiteRodadas': 10, 'tempoAposta': 60, 'tempoTurno': 60}})
+    mesa = r['visao']['codigo']
+    chamar({**JOAO, 'acao': 'entrar', 'codigo': mesa})
+    r = chamar({**MAYK, 'acao': 'crupie', 'codigo': mesa, 'valor': True})
+    checar(r.get('visao', {}).get('crupieId') == MAYK['jogador']['id'], 'Mayk assume o crupiê', r.get('erro'))
+    r = chamar({**JOAO, 'acao': 'crupie', 'codigo': mesa, 'valor': True})
+    checar(r.get('erro', {}).get('motivo') == 'crupie-ocupado', 'Só cabe um crupiê', r)
+
+    chamar({**MAYK, 'acao': 'iniciar', 'codigo': mesa})
+    r = chamar({**MAYK, 'acao': 'apostar', 'codigo': mesa, 'valor': 500})
+    checar(r.get('erro', {}).get('motivo') == 'crupie', 'O crupiê não aposta', r)
+
+    # Joga até cair na vez do crupiê (uma rodada pode fechar antes, por Blackjack).
+    import time
+    chegou = False
+    for _ in range(4):
+        r = chamar({**JOAO, 'acao': 'apostar', 'codigo': mesa, 'valor': 500})
+        v = r.get('visao') or chamar({**JOAO, 'acao': 'estado', 'codigo': mesa})['visao']
+        if v['status'] == 'TURNO_JOGADORES':
+            v = chamar({**JOAO, 'acao': 'agir', 'codigo': mesa, 'jogada': 'PARAR'})['visao']
+        if v['status'] == 'TURNO_DEALER' and v['vezDe'] == MAYK['jogador']['id']:
+            chegou = True
+            break
+        time.sleep(6.5)                     # pausa do resultado, e tenta outra rodada
+        chamar({**JOAO, 'acao': 'tique', 'codigo': mesa})
+    checar(chegou, 'Depois do jogador, a vez é do crupiê')
+    if chegou:
+        checar(len(v['dealer']['cartas']) >= 2, 'A carta escondida virou para a vez do crupiê')
+        r = chamar({**JOAO, 'acao': 'agir', 'codigo': mesa, 'jogada': 'PEDIR'})
+        checar(r.get('erro', {}).get('motivo') == 'fora-da-vez', 'Jogador não mexe no dealer', r)
+        r = chamar({**MAYK, 'acao': 'agir', 'codigo': mesa, 'jogada': 'PARAR'})
+        v = r.get('visao', {})
+        checar(v.get('status') == 'RESULTADO', 'O crupiê para quando quer', r.get('erro'))
+        crupie = next(j for j in v['jogadores'] if j['id'] == MAYK['jogador']['id'])
+        checar(crupie['fichas'] == 10000, 'Banca da casa: o crupiê não ganha nem perde', crupie['fichas'])
+        checar(all(l['id'] != MAYK['jogador']['id'] for l in v['ranking']), 'O crupiê fica fora do ranking')
+
+    chamar({**JOAO, 'acao': 'sair', 'codigo': mesa})
+    chamar({**MAYK, 'acao': 'sair', 'codigo': mesa})
+
     # Sala que não existe.
     r = chamar({**MAYK, 'acao': 'estado', 'codigo': 'ZZZZZZ'})
     checar(r.get('erro', {}).get('motivo') == 'sem-sala', 'Código inexistente dá erro claro', r)

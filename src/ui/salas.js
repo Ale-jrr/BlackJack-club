@@ -55,7 +55,16 @@ function euNaVisao() {
   return visao?.jogadores.find((j) => j.id === meuId()) ?? null;
 }
 
+// O crupiê joga livre na vez do dealer: pedir ou parar, até estourar ou fazer 21.
+function acoesDeCrupie() {
+  if (!visao || visao.status !== STATUS_SALA.TURNO_DEALER) return [];
+  if (visao.vezDe !== meuId() || visao.crupieId !== meuId()) return [];
+  return visao.dealer.valor < 21 ? [ACOES.PEDIR, ACOES.PARAR] : [];
+}
+
 function minhasAcoes() {
+  const deCrupie = acoesDeCrupie();
+  if (deCrupie.length) return deCrupie;
   if (!visao || visao.status !== STATUS_SALA.TURNO_JOGADORES) return [];
   if (visao.vezDe !== meuId()) return [];
   const eu = euNaVisao();
@@ -209,12 +218,15 @@ function pintarCriar() {
       <button class="chave" id="c-recompra"><i></i></button></div>
     <div class="opcao"><div><b>Entrada durante a partida</b><small>Sem isso, quem chega depois assiste</small></div>
       <button class="chave" id="c-entrada"><i></i></button></div>
+    <div class="opcao"><div><b>Crupiê de verdade</b><small>Um jogador vira o crupiê: não aposta e decide
+      livremente as jogadas do dealer. A banca continua sendo da casa.</small></div>
+      <button class="chave" id="c-crupie"><i></i></button></div>
     <div class="dica" id="aviso-criar"></div>`;
 
   for (const b of $('atalhos-fichas').querySelectorAll('[data-v]')) {
     b.onclick = () => { $('c-fichas').value = b.dataset.v; som.ficha(); conferirCriar(); };
   }
-  for (const id of ['c-publica', 'c-recompra', 'c-entrada']) {
+  for (const id of ['c-publica', 'c-recompra', 'c-entrada', 'c-crupie']) {
     $(id).onclick = () => { $(id).classList.toggle('ligada'); som.botao(); };
   }
   for (const id of ['c-fichas', 'c-min', 'c-max', 'c-jogadores']) {
@@ -240,6 +252,7 @@ function lerConfigDaTela() {
       publica: $('c-publica').classList.contains('ligada'),
       permitirRecompra: $('c-recompra').classList.contains('ligada'),
       permitirEntradaDurante: $('c-entrada').classList.contains('ligada'),
+      crupieHumano: $('c-crupie').classList.contains('ligada'),
     },
   };
 }
@@ -401,6 +414,11 @@ function anunciarMudancas(antes, agora) {
           linha.lucro === 0 ? 'Aposta devolvida' : `${linha.lucro > 0 ? '+' : ''}${fmt(linha.lucro)} fichas`,
           linha.lucro > 0 ? 'ganhou' : linha.lucro === 0 ? '' : 'perdeu',
         );
+      } else if (eu?.crupie) {
+        const h = agora.historico[0];
+        som.empate();
+        ctx.anuncio(h?.dealerEstourou ? 'DEALER ESTOUROU' : `DEALER FEZ ${h?.dealer ?? ''}`,
+          'Banca da casa: você não ganha nem perde', '');
       } else if (eu && !eu.espectador) {
         ctx.anuncio('RODADA ENCERRADA', 'Você ficou fora desta', '');
       }
@@ -460,16 +478,20 @@ function pintarLobby() {
     ['Tempo por jogada', `${c.tempoTurno}s`],
     ['Tempo para apostar', `${c.tempoAposta}s`],
     ['Senha', visao.temSenha ? '🔒 sim' : 'sem senha'],
+    ['Crupiê', c.crupieHumano ? 'um jogador' : 'automático'],
     ['Na lista de salas', c.publica ? 'sim' : 'não'],
   ].map(([r, v]) => `<div class="numero"><b>${v}</b><span>${r}</span></div>`).join('');
 
   $('lobby-jogadores').innerHTML = visao.jogadores.map((j) => `
-    <div class="item ${j.pronto ? 'feito' : ''}">
-      <span class="ic">${j.avatar ?? '🂡'}</span>
+    <div class="item ${j.crupie ? 'crupie' : j.pronto ? 'feito' : ''}">
+      <span class="ic">${j.crupie ? '🎩' : j.avatar ?? '🂡'}</span>
       <span><b>${escapar(j.nome)} ${j.ehHost ? '<small>ADM</small>' : ''}</b>
-        <small>${j.espectador ? 'assistindo' : `${fmt(j.fichas)} fichas`}${j.conectado ? '' : ' · desconectado'}</small></span>
-      <span class="premio">${j.espectador ? '👁' : j.pronto ? 'PRONTO' : '...'}</span>
+        <small>${j.crupie ? 'conduz a mesa, não aposta'
+          : j.espectador ? 'assistindo' : `${fmt(j.fichas)} fichas`}${j.conectado ? '' : ' · desconectado'}</small></span>
+      <span class="premio">${j.crupie ? 'CRUPIÊ' : j.espectador ? '👁' : j.pronto ? 'PRONTO' : '...'}</span>
     </div>`).join('');
+
+  pintarLugarDeCrupie();
 
   // §48: cada um escolhe como aparece na mesa, e dá para trocar até começar.
   const eu = euNaVisao();
@@ -487,10 +509,35 @@ function pintarLobby() {
 
   const btnIniciar = $('btn-iniciar-partida');
   btnIniciar.hidden = !visao.souHost;
-  btnIniciar.disabled = ocupado || visao.jogadores.filter((j) => !j.espectador).length < 1;
+  btnIniciar.disabled = ocupado
+    || visao.jogadores.filter((j) => !j.espectador && !j.crupie).length < 1;
   btnIniciar.onclick = () => { som.botao(); acao('iniciar', { codigo: visao.codigo }); };
 
   $('btn-copiar-link').onclick = copiarConvite;
+}
+
+// O lugar de crupiê fica aberto no lobby: quem quiser, assume; quem assumiu, larga.
+function pintarLugarDeCrupie() {
+  const caixa = $('lobby-crupie');
+  if (!visao.config.crupieHumano) {
+    caixa.hidden = true;
+    return;
+  }
+  caixa.hidden = false;
+  const eu = euNaVisao();
+  const crupie = visao.jogadores.find((j) => j.id === visao.crupieId);
+  const souEu = crupie?.id === meuId();
+
+  $('lobby-crupie-quem').textContent = crupie
+    ? (souEu ? 'Você é o crupiê desta mesa.' : `${crupie.nome} é o crupiê desta mesa.`)
+    : 'Ninguém assumiu. Se continuar assim, o dealer automático joga.';
+
+  const botao = $('btn-crupie');
+  botao.hidden = Boolean(crupie && !souEu) || Boolean(eu?.espectador);
+  botao.textContent = souEu ? 'DEIXAR DE SER O CRUPIÊ' : 'QUERO SER O CRUPIÊ';
+  botao.className = `botao ${souEu ? 'discreto' : 'ouro'}`;
+  botao.disabled = ocupado;
+  botao.onclick = () => { som.botao(); acao('crupie', { codigo: visao.codigo, valor: !souEu }); };
 }
 
 async function trocarNome(bruto) {
@@ -539,6 +586,12 @@ function pintarMesa() {
   for (let i = 0; i < visao.dealer.escondidas; i++) {
     caixaDealer.append(elementoCarta(null, { virada: true }));
   }
+  // Com crupiê de verdade, o dealer tem nome e brilha quando é a vez dele.
+  const crupie = visao.jogadores.find((j) => j.id === visao.crupieId);
+  $('sala-nome-dealer').textContent = crupie ? `Crupiê · ${crupie.nome}` : 'Dealer';
+  document.querySelector('.lugar-dealer')
+    .classList.toggle('na-vez', visao.status === STATUS_SALA.TURNO_DEALER && Boolean(crupie));
+
   $('sala-valor-dealer').innerHTML = visao.dealer.cartas.length
     ? `<span class="valor-lugar ${visao.dealer.revelado && visao.dealer.valor > 21 ? 'ruim' : ''}">${
       visao.dealer.revelado && visao.dealer.valor > 21
@@ -547,8 +600,8 @@ function pintarMesa() {
     : '';
 
   pintarLugares();
-  $('sala-minhas-fichas').innerHTML = eu && !eu.espectador
-    ? `<span class="moeda"></span> ${fmt(eu.fichas)}`
+  $('sala-minhas-fichas').innerHTML = eu?.crupie ? 'você é o crupiê'
+    : eu && !eu.espectador ? `<span class="moeda"></span> ${fmt(eu.fichas)}`
     : 'assistindo';
   if (eu) {
     pintarFichasDeAposta(eu);
@@ -614,7 +667,8 @@ function pilhaDeFichas(valor) {
 
 function pintarLugares() {
   const caixa = $('sala-lugares');
-  const naMesa = visao.jogadores.filter((j) => !j.espectador);
+  // O crupiê não tem lugar no arco: ele é o dealer, lá em cima.
+  const naMesa = visao.jogadores.filter((j) => !j.espectador && !j.crupie);
   const ordem = centralizarEmMim(naMesa);
 
   // Com a mesa cheia os lugares encolhem para caber lado a lado sem se cobrir.
@@ -705,7 +759,8 @@ function pintarLugares() {
 
 function pintarFichasDeAposta(eu) {
   const caixa = $('sala-fichas');
-  const apostando = visao.status === STATUS_SALA.APOSTAS && !eu.apostaPendente && !eu.espectador;
+  const apostando = visao.status === STATUS_SALA.APOSTAS && !eu.apostaPendente
+    && !eu.espectador && !eu.crupie;
   caixa.innerHTML = '';
   if (!apostando) return;
 
@@ -742,6 +797,11 @@ function pintarAcoes(eu) {
   caixa.innerHTML = '';
   const dica = $('sala-dica');
 
+  if (eu.crupie && visao.status === STATUS_SALA.APOSTAS) {
+    dica.textContent = 'Você é o crupiê. Os jogadores estão apostando.';
+    return;
+  }
+
   if (visao.status === STATUS_SALA.APOSTAS) {
     dica.textContent = eu.apostaPendente
       ? `Aposta de ${fmt(eu.apostaPendente)} na mesa. Esperando os outros.`
@@ -767,15 +827,25 @@ function pintarAcoes(eu) {
   const acoes = minhasAcoes();
   if (acoes.length === 0) {
     const daVez = visao.jogadores.find((j) => j.id === visao.vezDe);
-    dica.textContent = visao.status === STATUS_SALA.TURNO_JOGADORES && daVez
-      ? `Vez de ${daVez.nome}.`
-      : visao.status === STATUS_SALA.RESULTADO ? 'Resultado da rodada.' : 'O dealer está jogando.';
+    if (visao.status === STATUS_SALA.TURNO_JOGADORES && daVez) {
+      dica.textContent = eu.crupie
+        ? `Vez de ${daVez.nome}. A sua chega depois dos jogadores.`
+        : `Vez de ${daVez.nome}.`;
+    } else if (visao.status === STATUS_SALA.TURNO_DEALER && daVez) {
+      dica.textContent = `Vez do crupiê ${daVez.nome}.`;
+    } else {
+      dica.textContent = visao.status === STATUS_SALA.RESULTADO ? 'Resultado da rodada.' : 'O dealer está jogando.';
+    }
     return;
   }
 
-  dica.textContent = eu.maos.length > 1
-    ? `Sua vez — mão ${eu.maoAtual + 1} de ${eu.maos.length}.`
-    : 'Sua vez.';
+  if (acoesDeCrupie().length) {
+    dica.textContent = `Sua vez de crupiê: o dealer tem ${visao.dealer.valor}. Peça ou pare quando quiser.`;
+  } else {
+    dica.textContent = eu.maos.length > 1
+      ? `Sua vez — mão ${eu.maoAtual + 1} de ${eu.maos.length}.`
+      : 'Sua vez.';
+  }
 
   const nomes = {
     [ACOES.PEDIR]: ['PEDIR', 'verde'],

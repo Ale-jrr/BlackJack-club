@@ -10,7 +10,7 @@
 // Realtime.
 
 import {
-  STATUS_SALA, agir, ajustarConfig, apostar, criarSala, definirConexao,
+  STATUS_SALA, agir, ajustarConfig, apostar, assumirCrupie, criarSala, definirConexao,
   definirPronto, entrar, gerarCodigo, iniciar, recomprar, sair,
   tique, visaoPara,
 } from './motor/sala.js';
@@ -260,6 +260,9 @@ Deno.serve(async (req: Request) => {
           break;
         case 'recomprar':
           recomprar(sala, jogador.id);
+          break;
+        case 'crupie':
+          assumirCrupie(sala, jogador.id, corpo.valor !== false);
           break;
         case 'sair':
           sair(sala, jogador.id, agora);

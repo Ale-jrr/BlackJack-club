@@ -129,6 +129,10 @@ Fases 1 a 4 do projeto, mais as mesas por nível da Fase 5:
   lobby com pronto e nome editável, senha opcional, até 10 jogadores, aposta com prazo, jogada **um por vez**
   com cronômetro, dealer compartilhado, ranking da sala, campeão, recompra, espectadores,
   reconexão.
+- **Crupiê de verdade (opcional)**: quem cria a sala liga a opção e, no lobby, qualquer jogador
+  assume o lugar. O crupiê não aposta, fica fora do ranking e decide livremente pedir ou parar
+  na vez do dealer — a banca continua sendo da casa. Se o tempo dele acabar ou ele sair, o dealer
+  termina pela regra da casa; se ninguém assumir, joga o dealer automático.
 - **Salas abertas na tela inicial**: quem entra no jogo já vê as salas públicas, com cadeado
   nas que têm senha, vagas e se estão esperando gente ou em partida. A lista se atualiza sozinha.
 - Mesa online desenhada como mesa de verdade: dealer no topo, lugares em arco com fichas e

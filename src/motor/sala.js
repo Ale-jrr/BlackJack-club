@@ -78,6 +78,9 @@ export function normalizarConfig(bruta = {}) {
     permitirRecompra: Boolean(bruta.permitirRecompra),
     permitirEntradaDurante: Boolean(bruta.permitirEntradaDurante),
     permitirDesistir: bruta.permitirDesistir !== false,
+    // Um jogador pode ser o crupiê: conduz a vez do dealer e decide livremente
+    // pedir ou parar. A banca continua sendo da casa — ele não ganha nem perde.
+    crupieHumano: Boolean(bruta.crupieHumano),
   };
 
   // §45: a aposta mínima não pode ser maior que o saldo com que todo mundo começa,
@@ -147,6 +150,7 @@ export function criarSala({
     historico: [],
     criadaEm: agora,
     senha: senha || null,
+    crupieId: null,
     versao: 1,
   };
   return sala;
@@ -154,6 +158,21 @@ export function criarSala({
 
 export function jogadorDe(sala, id) {
   return sala.jogadores.find((j) => j.id === id) ?? null;
+}
+
+// Quem conduz a mesa não aposta nem entra no ranking. Salas criadas antes do
+// crupiê humano existir não têm `crupieId`, e isso vale como "sem crupiê".
+export function ehCrupie(sala, id) {
+  return Boolean(sala.config.crupieHumano && sala.crupieId && sala.crupieId === id);
+}
+
+function crupieNaMesa(sala) {
+  return Boolean(sala.config.crupieHumano && sala.crupieId && jogadorDe(sala, sala.crupieId));
+}
+
+// Joga na mesa quem não está assistindo e não é o crupiê.
+function apostador(sala, jogador) {
+  return !jogador.espectador && !ehCrupie(sala, jogador.id);
 }
 
 function exigirJogador(sala, id) {
@@ -197,7 +216,9 @@ export function sair(sala, id, agora = Date.now()) {
   if (!jogador) return sala;
 
   const jogando = sala.status === STATUS_SALA.TURNO_JOGADORES && sala.vezDe === id;
+  const conduzindo = sala.status === STATUS_SALA.TURNO_DEALER && sala.vezDe === id;
   sala.jogadores = sala.jogadores.filter((j) => j.id !== id);
+  if (sala.crupieId === id) sala.crupieId = null;
 
   if (sala.jogadores.length === 0) {
     sala.status = STATUS_SALA.PARTIDA_FINALIZADA;
@@ -209,6 +230,8 @@ export function sair(sala, id, agora = Date.now()) {
     sala.hostId = maisAntigo.id;
   }
   if (jogando) passarAVez(sala, agora);
+  // O crupiê sumiu no meio da vez dele: o dealer termina pela regra da casa.
+  if (conduzindo) turnoDoDealer(sala, agora);
   return sala;
 }
 
@@ -225,12 +248,32 @@ export function definirPronto(sala, id, valor = true) {
   return sala;
 }
 
+export function assumirCrupie(sala, id, querer = true) {
+  const jogador = exigirJogador(sala, id);
+  if (!sala.config.crupieHumano) recusar('sem-crupie', 'Esta sala usa o dealer automático.');
+  if (sala.status !== STATUS_SALA.LOBBY && sala.status !== STATUS_SALA.PARTIDA_FINALIZADA) {
+    recusar('fase', 'O crupiê só muda entre partidas.');
+  }
+  if (!querer) {
+    if (sala.crupieId === id) sala.crupieId = null;
+    return sala;
+  }
+  if (jogador.espectador) recusar('espectador', 'Quem está assistindo não pode ser o crupiê.');
+  if (sala.crupieId && sala.crupieId !== id) {
+    recusar('crupie-ocupado', `${jogadorDe(sala, sala.crupieId)?.nome ?? 'Alguém'} já é o crupiê.`);
+  }
+  sala.crupieId = id;
+  jogador.pronto = false;
+  return sala;
+}
+
 export function ajustarConfig(sala, id, bruta) {
   exigirHost(sala, id);
   // §51: depois que a partida começa, as regras ficam travadas.
   if (sala.status !== STATUS_SALA.LOBBY) recusar('fase', 'As regras travam quando a partida começa.');
   const antes = sala.config;
   sala.config = normalizarConfig({ ...antes, ...bruta });
+  if (!sala.config.crupieHumano) sala.crupieId = null;
   for (const j of sala.jogadores) {
     if (!j.espectador) j.fichas = sala.config.fichasIniciais;
   }
@@ -244,8 +287,12 @@ export function iniciar(sala, id, agora = Date.now()) {
   if (sala.status !== STATUS_SALA.LOBBY && sala.status !== STATUS_SALA.PARTIDA_FINALIZADA) {
     recusar('fase', 'A partida já está em andamento.');
   }
-  const naMesa = sala.jogadores.filter((j) => !j.espectador);
-  if (naMesa.length === 0) recusar('sem-jogadores', 'Ninguém na mesa.');
+  const naMesa = sala.jogadores.filter((j) => apostador(sala, j));
+  if (naMesa.length === 0) {
+    recusar('sem-jogadores', crupieNaMesa(sala)
+      ? 'Falta pelo menos um jogador além do crupiê.'
+      : 'Ninguém na mesa.');
+  }
 
   sala.rodada = 0;
   sala.historico = [];
@@ -281,7 +328,7 @@ function abrirApostas(sala, agora) {
 
 export function podeApostar(sala, jogador) {
   return sala.status === STATUS_SALA.APOSTAS
-    && !jogador.espectador
+    && apostador(sala, jogador)
     && jogador.apostaPendente === 0
     && jogador.fichas >= sala.config.apostaMin;
 }
@@ -290,6 +337,7 @@ export function apostar(sala, id, valor, agora = Date.now()) {
   const jogador = exigirJogador(sala, id);
   if (sala.status !== STATUS_SALA.APOSTAS) recusar('fase', 'Não é hora de apostar.');
   if (jogador.espectador) recusar('espectador', 'Você está assistindo esta partida.');
+  if (ehCrupie(sala, id)) recusar('crupie', 'O crupiê conduz a mesa e não aposta.');
   if (jogador.apostaPendente > 0) recusar('ja-apostou', 'Sua aposta já está na mesa.');
 
   const v = Math.floor(Number(valor));
@@ -307,7 +355,7 @@ export function apostar(sala, id, valor, agora = Date.now()) {
 
 function todosApostaram(sala) {
   return sala.jogadores
-    .filter((j) => !j.espectador && j.fichas + j.apostaPendente >= sala.config.apostaMin)
+    .filter((j) => apostador(sala, j) && j.fichas + j.apostaPendente >= sala.config.apostaMin)
     .every((j) => j.apostaPendente > 0);
 }
 
@@ -381,10 +429,41 @@ function passarAVez(sala, agora) {
       return sala;
     }
   }
-  return turnoDoDealer(sala, agora);
+  return vezDoDealer(sala, agora);
+}
+
+// Com crupiê humano na mesa, a vez do dealer é dele: a carta escondida vira e
+// ele decide pedir ou parar, sem a regra dos 17. Sem crupiê — ou quando ninguém
+// precisa que o dealer jogue, porque todo mundo estourou —, o dealer é o de sempre.
+function vezDoDealer(sala, agora) {
+  if (!crupieNaMesa(sala) || !precisaDoDealer(jogadoresNaRodada(sala))) {
+    return turnoDoDealer(sala, agora);
+  }
+  sala.status = STATUS_SALA.TURNO_DEALER;
+  sala.vezDe = sala.crupieId;
+  sala.dealer.revelado = true;
+  sala.prazo = agora + sala.config.tempoTurno * 1000;
+  if (valorDaMao(sala.dealer.cartas).total >= 21) return encerrarRodada(sala, agora);
+  return sala;
+}
+
+function acoesDoCrupie(sala) {
+  return valorDaMao(sala.dealer.cartas).total < 21 ? [ACOES.PEDIR, ACOES.PARAR] : [];
+}
+
+function agirComoCrupie(sala, acao, agora) {
+  if (acao === ACOES.PARAR) return encerrarRodada(sala, agora);
+  sala.dealer.cartas.push(comprar(sala.shoe));
+  // Estourou ou fez 21: não tem mais o que decidir.
+  if (valorDaMao(sala.dealer.cartas).total >= 21) return encerrarRodada(sala, agora);
+  sala.prazo = agora + sala.config.tempoTurno * 1000;
+  return sala;
 }
 
 export function acoesDe(sala, id) {
+  if (sala.status === STATUS_SALA.TURNO_DEALER && sala.vezDe === id && ehCrupie(sala, id)) {
+    return acoesDoCrupie(sala);
+  }
   if (sala.status !== STATUS_SALA.TURNO_JOGADORES || sala.vezDe !== id) return [];
   const jogador = jogadorDe(sala, id);
   if (!jogador) return [];
@@ -393,6 +472,11 @@ export function acoesDe(sala, id) {
 
 export function agir(sala, id, acao, agora = Date.now()) {
   const jogador = exigirJogador(sala, id);
+  if (sala.status === STATUS_SALA.TURNO_DEALER) {
+    if (sala.vezDe !== id || !ehCrupie(sala, id)) recusar('fora-da-vez', 'É a vez do crupiê.');
+    if (!acoesDoCrupie(sala).includes(acao)) recusar('acao', `Ação indisponível: ${acao}`);
+    return agirComoCrupie(sala, acao, agora);
+  }
   if (sala.status !== STATUS_SALA.TURNO_JOGADORES) recusar('fase', 'Não é hora de jogar.');
   if (sala.vezDe !== id) recusar('fora-da-vez', 'Não é a sua vez.');
   if (!acoesDe(sala, id).includes(acao)) recusar('acao', `Ação indisponível: ${acao}`);
@@ -474,7 +558,7 @@ function acabou(sala) {
 }
 
 function temQuemJogue(sala) {
-  return sala.jogadores.some((j) => !j.espectador
+  return sala.jogadores.some((j) => apostador(sala, j)
     && (j.fichas >= sala.config.apostaMin || sala.config.permitirRecompra));
 }
 
@@ -514,6 +598,10 @@ export function tique(sala, agora = Date.now()) {
 
   if (sala.status === STATUS_SALA.RESULTADO) return proximaRodada(sala, agora);
 
+  // O crupiê deixou o tempo acabar: o dealer termina pela regra da casa. Parar
+  // na hora daria a rodada de presente a quem tem 12 contra um crupiê ausente.
+  if (sala.status === STATUS_SALA.TURNO_DEALER) return turnoDoDealer(sala, agora);
+
   return sala;
 }
 
@@ -521,7 +609,7 @@ export function tique(sala, agora = Date.now()) {
 
 export function ranking(sala) {
   return sala.jogadores
-    .filter((j) => !j.espectador)
+    .filter((j) => apostador(sala, j))
     .map((j) => ({
       id: j.id, nome: j.nome, avatar: j.avatar, fichas: j.fichas,
       lucro: j.fichas - j.fichasIniciaisRecebidas,
@@ -561,6 +649,7 @@ export function visaoPara(sala, id) {
     hostId: sala.hostId,
     souHost: sala.hostId === id,
     temSenha: Boolean(sala.senha),       // só o fato de ter; a senha em si nunca sai
+    crupieId: sala.config.crupieHumano ? (sala.crupieId ?? null) : null,
     config: sala.config,
     status: sala.status,
     rodada: sala.rodada,
@@ -590,6 +679,7 @@ export function visaoPara(sala, id) {
       espectador: j.espectador,
       souEu: j.id === id,
       ehHost: j.id === sala.hostId,
+      crupie: ehCrupie(sala, j.id),
       maos: j.maos.map((m) => ({
         cartas: m.cartas.slice(),
         aposta: m.aposta,
