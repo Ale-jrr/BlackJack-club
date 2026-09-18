@@ -280,7 +280,9 @@ export function linhaHistorico(h) {
   const classe = h.rotulo === 'BLACKJACK' ? 'bj'
     : h.lucro > 0 ? 'ganhou' : h.lucro < 0 ? 'perdeu' : 'empatou';
   const sinal = h.lucro > 0 ? 'mais' : h.lucro < 0 ? 'menos' : '';
+  const letra = { bj: 'BJ', ganhou: 'V', perdeu: 'D', empatou: 'E' }[classe];
   return `<div class="linha-hist ${classe}">
+      <span class="ficha-res" title="${h.rotulo}">${letra}</span>
       <span>#${h.numero} · ${h.rotulo}</span>
       <span class="lucro ${sinal}">${h.lucro > 0 ? '+' : ''}${fmt(h.lucro)}</span>
       <span class="cartas-txt">Você ${h.jogador.join(' | ')} · Dealer ${h.dealer} (${h.valorDealer})</span>

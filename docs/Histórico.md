@@ -24,6 +24,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `f592ae0` | Fichas do menu com o desenho da função no miolo, no lugar do naipe |
 | 18/09 | `9aa2097` | **Missões**: bônus em pilhas de fichas, missões com anel de progresso, conquistas em vitrine de medalhas |
 | 18/09 | `2df5fe5` | **Criar sala** como "montar a mesa": prévia ao vivo, cadeiras, rodadas em botões, tempos com − e + |
+| 18/09 | COMMIT | Mesa da carreira com bandeja, sapato e descarte; fichas de aposta com insertos; histórico com ficha de resultado |
 
 ---
 

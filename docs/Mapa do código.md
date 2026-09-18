@@ -96,6 +96,10 @@ segunda cópia, os dois modos vão divergir em silêncio.
   arco (`svg.pintura` no `index.html`, limites em `#faixa-regras`). A aposta fica em
   `.circulo-aposta`, com LIMPAR / REPETIR / DOBRAR posicionados por grade em `#caixa-aposta`.
   A lateral usa `.placa` (uma linha por número) em vez de cartões.
+  Enfeites do crupiê (`.objetos-dealer`: `.descarte`, `.bandeja`, `.sapato`) só aparecem de
+  1100px para cima; é por eles que a `.mesa` ganha `padding-top: 64px` nessa largura.
+- **Fichas de aposta** (`.ficha.f50` … `.f10000`): a cor vem de `--cor`; o mesmo desenho
+  serve à carreira e à sala online.
 - **Missões** (`app.js` → `pintarMissoes`): `.pilha-bonus` (pilhas de fichas por dia),
   `.missao` com `.anel` (progresso em `--p`), `.vitrine` de `.medalha`. O desenho de cada
   missão e conquista fica em `DESENHO_DA_MISSAO` e `DESENHO_DA_CONQUISTA`; missão nova sem
