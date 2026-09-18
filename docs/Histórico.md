@@ -15,7 +15,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `52fea2b` | LEIA-ME explica a economia de chamadas |
 | 18/09 | `97a1e0b` | **Crupiê de verdade** |
 | 18/09 | `5dbb01b` | **Aposta livre** na sala; scripts de teste imprimem naipe no Windows |
-| 18/09 | — | Número grande no lobby e no feltro sai abreviado ("10 bi") |
+| 18/09 | `0f5e572` | Número grande no lobby e no feltro sai abreviado ("10 bi") |
 
 ---
 
