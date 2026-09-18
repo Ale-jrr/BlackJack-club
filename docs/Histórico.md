@@ -20,7 +20,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `74c0198` | **Visual novo**: fontes Cinzel e Manrope, ícones desenhados no menu, bônus em faixa |
 | 18/09 | `21fe03a` | **Menu refeito como mesa**: feltro com as duas ações, o resto vira linha de texto |
 | 18/09 | `6cd5e1d` | **Mesa da carreira como mesa de verdade**: trilho, base curva, letreiro em arco, círculo de aposta; lateral vira placa |
-| 18/09 | COMMIT | **Menu em fichas de cassino**: a linha de texto embaixo da mesa vira uma fileira de fichas |
+| 18/09 | `a022dba` | **Menu em fichas de cassino**: a linha de texto embaixo da mesa vira uma fileira de fichas |
 
 ---
 
