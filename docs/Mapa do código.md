@@ -90,7 +90,7 @@ segunda cópia, os dois modos vão divergir em silêncio.
 - **Números** usam `tabular-nums` no `body`: saldo e cronômetro não tremem.
 - **Menu**: `.mesa-entrada` (feltro com trilho e curva, em `estilo.css`) recebe as duas
   ações de `ACOES_ENTRADA`; `.fichas-menu` recebe `ITENS_MENU` como fichas de cassino
-  (`.ficha-menu`, cor em `--cor`, naipe no miolo). Recusados pelo Mayk: grade de cartões com
+  (`.ficha-menu`, cor em `--cor`, desenho de `ICONES` no miolo). Recusados pelo Mayk: grade de cartões com
   ícone ("muita cara de IA") e linha de texto com pontos.
 - **Mesa da carreira**: `.mesa` tem o mesmo trilho e base curva do menu, e o letreiro em
   arco (`svg.pintura` no `index.html`, limites em `#faixa-regras`). A aposta fica em

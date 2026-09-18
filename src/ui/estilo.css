@@ -249,13 +249,13 @@ main { height: calc(100% - var(--topo)); overflow: hidden; }
   background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.28), transparent 46%);
 }
 .ficha-menu .miolo {
-  width: 62%; aspect-ratio: 1; border-radius: 50%;
+  width: 66%; aspect-ratio: 1; border-radius: 50%;
   display: grid; place-items: center;
   border: 1.5px dashed rgba(255,255,255,.6);
   background: radial-gradient(circle at 40% 35%, color-mix(in srgb, var(--cor) 80%, #fff), var(--cor) 70%);
-  color: rgba(255,255,255,.95); font-size: calc(var(--lado) * .3); line-height: 1;
-  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  color: #fff; line-height: 1;
 }
+.ficha-menu .miolo svg { width: 70%; height: 70%; stroke-width: 2; filter: drop-shadow(0 1px 1px rgba(0,0,0,.45)); }
 .ficha-menu .nome {
   font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
   color: rgba(242,238,227,.82); text-align: center; line-height: 1.3;

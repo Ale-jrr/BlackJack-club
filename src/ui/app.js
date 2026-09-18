@@ -151,20 +151,33 @@ const ACOES_ENTRADA = [
   { titulo: 'MESA COM AMIGOS', sub: 'salas de até 10', classe: 'secundaria', acao: () => abrirAmigos() },
 ];
 
-// Cada item é uma ficha de cassino, com a cor de um valor de verdade e um naipe no miolo.
+// Desenho de traço branco no miolo da ficha: diz para que serve o botão sem ler o nome.
+const traco = (corpo) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${corpo}</svg>`;
+const ICONES = {
+  missoes: traco('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>'),
+  ranking: traco('<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/>'),
+  perfil: traco('<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.9-3.9 3.8-6.2 7.5-6.2s6.6 2.3 7.5 6.2"/>'),
+  stats: traco('<path d="M4 20h16"/><rect x="5.5" y="11" width="3" height="7" rx=".6"/><rect x="10.5" y="6" width="3" height="12" rx=".6"/><rect x="15.5" y="13.5" width="3" height="4.5" rx=".6"/>'),
+  tutorial: traco('<path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c1.4 1.6 3.3 2.4 5.5 2.4s4.1-.8 5.5-2.4V11"/><path d="M21.5 9v5"/>'),
+  loja: traco('<path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>'),
+  config: traco('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'),
+};
+
+// Cada item é uma ficha de cassino, com a cor de um valor de verdade e o desenho da função no miolo.
 const ITENS_MENU = [
-  { titulo: 'Missões', cor: '#2f6fd0', naipe: '♠', acao: () => ir('missoes') },
-  { titulo: 'Ranking', cor: '#1f8a55', naipe: '♥', acao: () => ir('perfil') },
-  { titulo: 'Perfil', cor: '#b8322f', naipe: '♦', acao: () => ir('perfil') },
-  { titulo: 'Estatísticas', cor: '#6a3cb0', naipe: '♣', acao: () => ir('estatisticas') },
-  { titulo: 'Como se joga', cor: '#c9962e', naipe: '♠', acao: () => abrirTutorial() },
-  { titulo: 'Loja', cor: '#5f6b70', naipe: '♥', breve: true, acao: () => modal(
+  { titulo: 'Missões', cor: '#2f6fd0', icone: ICONES.missoes, acao: () => ir('missoes') },
+  { titulo: 'Ranking', cor: '#1f8a55', icone: ICONES.ranking, acao: () => ir('perfil') },
+  { titulo: 'Perfil', cor: '#b8322f', icone: ICONES.perfil, acao: () => ir('perfil') },
+  { titulo: 'Estatísticas', cor: '#6a3cb0', icone: ICONES.stats, acao: () => ir('estatisticas') },
+  { titulo: 'Como se joga', cor: '#c9962e', icone: ICONES.tutorial, acao: () => abrirTutorial() },
+  { titulo: 'Loja', cor: '#5f6b70', icone: ICONES.loja, breve: true, acao: () => modal(
       'Loja',
       `<p>A loja é só cosmética: baralhos, mesas, fichas, molduras e efeitos. Nada nela muda
         a chance de nenhuma mão.</p>
        <p>Ela entra depois da progressão, junto com as mesas desbloqueáveis por nível.</p>`,
       [{ texto: 'ENTENDI', classe: 'ouro' }]) },
-  { titulo: 'Configurações', cor: '#23292c', naipe: '♦', acao: () => ir('config') },
+  { titulo: 'Configurações', cor: '#23292c', icone: ICONES.config, acao: () => ir('config') },
 ];
 
 function pintarMenu() {
@@ -184,7 +197,7 @@ function pintarMenu() {
     const b = document.createElement('button');
     b.className = `ficha-menu${item.breve ? ' breve' : ''}`;
     b.style.setProperty('--cor', item.cor);
-    b.innerHTML = `<span class="disco"><span class="miolo">${item.naipe}</span></span>
+    b.innerHTML = `<span class="disco"><span class="miolo">${item.icone}</span></span>
       <span class="nome">${item.titulo}${item.breve ? '<small>em breve</small>' : ''}</span>`;
     b.onclick = () => { som.botao(); item.acao(); };
     cardapio.append(b);
