@@ -161,6 +161,7 @@ const ICONES = {
   stats: traco('<path d="M4 20h16"/><rect x="5.5" y="11" width="3" height="7" rx=".6"/><rect x="10.5" y="6" width="3" height="12" rx=".6"/><rect x="15.5" y="13.5" width="3" height="4.5" rx=".6"/>'),
   tutorial: traco('<path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c1.4 1.6 3.3 2.4 5.5 2.4s4.1-.8 5.5-2.4V11"/><path d="M21.5 9v5"/>'),
   loja: traco('<path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>'),
+  cadeado: traco('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
   config: traco('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'),
 };
 
@@ -269,16 +270,49 @@ function pintarMesas() {
 
 // ---------------------------------------------------------------- missões
 
+// Desenho do que cada missão e conquista pede. Onde uma palavra do jogo explica melhor
+// que um desenho ("BJ", "×2", "21"), vai a palavra, em letra de letreiro.
+const DESENHO = {
+  trofeu: { svg: ICONES.ranking },
+  cartas: { svg: traco('<rect x="3.5" y="6" width="10" height="14" rx="1.8" transform="rotate(-9 8.5 13)"/><rect x="10" y="4" width="10" height="14" rx="1.8" transform="rotate(8 15 11)"/>') },
+  split: { svg: traco('<rect x="2.5" y="6" width="8" height="12" rx="1.5"/><rect x="13.5" y="6" width="8" height="12" rx="1.5"/><path d="M12 3v18" stroke-dasharray="2 2.5"/>') },
+  moedas: { svg: traco('<ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v4c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6M5 10v4c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6v-4M5 14v4c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6v-4"/>') },
+};
+const escrito = (texto) => ({ texto });
+const DESENHO_DA_MISSAO = {
+  'd-vitorias': DESENHO.trofeu, 'd-blackjack': escrito('BJ'), 'd-double': escrito('×2'),
+  'd-maos': DESENHO.cartas, 'd-vinteum': escrito('21'), 'd-split': DESENHO.split,
+  's-maos': DESENHO.cartas, 's-vitorias': DESENHO.trofeu, 's-blackjacks': escrito('BJ'),
+  's-fichas': DESENHO.moedas,
+};
+const DESENHO_DA_CONQUISTA = {
+  'primeira-vitoria': DESENHO.trofeu, 'primeiro-bj': escrito('BJ'), 'primeiro-split': DESENHO.split,
+  'double-perfeito': escrito('×2'), 'cem-vitorias': escrito('100'), 'mil-maos': DESENHO.cartas,
+  'sequencia-5': escrito('5×'), 'sequencia-10': escrito('10×'), 'saldo-100k': escrito('100K'),
+  'saldo-1m': escrito('1M'),
+};
+const pintarDesenho = (d) => (d?.svg ?? `<em>${d?.texto ?? '★'}</em>`);
+
+// Cor das fichas de cada dia do bônus: sobe de valor como as fichas de verdade.
+const CORES_DO_BONUS = ['#2f6fd0', '#1f8a55', '#b8322f', '#6a3cb0', '#23292c', '#c9962e', '#c9962e'];
+
 function pintarMissoes() {
+  // Bônus: sete pilhas de fichas, cada dia uma ficha a mais.
   const trilha = $('trilha-bonus');
   const ciclo = perfil.bonusDiario.ciclo;
+  const pode = bonusDisponivel(perfil);
   trilha.innerHTML = BONUS_DIARIO.map((valor, i) => {
     const classe = i < ciclo ? 'passou' : i === ciclo ? 'hoje' : '';
-    return `<div class="dia ${classe}"><span>Dia ${i + 1}</span><b>${fmt(valor)}</b></div>`;
+    const fichas = Array.from({ length: i + 1 }, () => '<i></i>').join('');
+    const rotulo = i === ciclo ? (pode ? 'HOJE' : 'AMANHÃ') : `Dia ${i + 1}`;
+    return `<div class="pilha-bonus ${classe}" style="--c:${CORES_DO_BONUS[i]}">
+        <div class="monte">${fichas}</div>
+        <span class="dia-rot">${i < ciclo ? '✓ ' : ''}${rotulo}</span>
+        <b>${fmt(valor)}</b>
+      </div>`;
   }).join('');
 
   const btn = $('btn-bonus');
-  const pode = bonusDisponivel(perfil);
   btn.disabled = !pode;
   btn.textContent = pode ? `RESGATAR ${fmt(BONUS_DIARIO[ciclo])} FICHAS` : 'JÁ RESGATADO HOJE';
   btn.onclick = () => {
@@ -290,23 +324,28 @@ function pintarMissoes() {
     pintarMissoes();
   };
 
+  // Missões: um anel que enche com o progresso, com o desenho da missão no meio.
   const { diarias, semanais } = missoesParaTela(perfil);
-  const linha = (m) => `<div class="item ${m.pronta ? 'feito' : ''}">
-      <span class="ic">${m.pronta ? '✅' : '🎯'}</span>
-      <span><b>${m.texto}</b>
-        <small>${Math.min(m.feito, m.alvo)} / ${m.alvo}</small>
-        <span class="progresso"><i style="width:${Math.min(100, (m.feito / m.alvo) * 100)}%"></i></span>
-      </span>
-      <span class="premio"><span class="moeda"></span> ${fmt(m.premio)}</span>
+  const linha = (m) => {
+    const feito = Math.min(m.feito, m.alvo);
+    const parte = Math.min(100, (feito / m.alvo) * 100);
+    return `<div class="missao ${m.pronta ? 'paga' : ''}">
+      <span class="anel" style="--p:${m.pronta ? 100 : parte}%"><span>${pintarDesenho(DESENHO_DA_MISSAO[m.id])}</span></span>
+      <span class="o-que"><b>${m.texto}</b>
+        <small>${m.pronta ? 'Feita — prêmio pago' : `${fmt(feito)} de ${fmt(m.alvo)}`}</small></span>
+      <span class="paga-quanto"><span class="moeda"></span> ${fmt(m.premio)}</span>
     </div>`;
+  };
   $('missoes-diarias').innerHTML = diarias.map(linha).join('');
   $('missoes-semanais').innerHTML = semanais.map(linha).join('');
 
+  // Conquistas: vitrine de medalhas. Ganha é ouro; bloqueada é bronze apagado com cadeado.
   $('lista-conquistas').innerHTML = conquistasParaTela(perfil).map((c) => `
-    <div class="item ${c.feita ? 'feito' : ''}">
-      <span class="ic">${c.feita ? '🏅' : '🔒'}</span>
-      <span><b>${c.nome}</b><small>${c.feita ? 'Conquistada' : 'Bloqueada'}</small></span>
-      <span class="premio"><span class="moeda"></span> ${fmt(c.premio)}</span>
+    <div class="medalha ${c.feita ? 'ganha' : ''}">
+      <span class="fita"></span>
+      <span class="disco">${pintarDesenho(DESENHO_DA_CONQUISTA[c.id])}${c.feita ? '' : `<span class="cadeado">${ICONES.cadeado}</span>`}</span>
+      <b>${c.nome}</b>
+      <small><span class="moeda"></span> ${fmt(c.premio)}</small>
     </div>`).join('');
 }
 
