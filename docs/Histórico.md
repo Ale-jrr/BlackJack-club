@@ -21,7 +21,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `21fe03a` | **Menu refeito como mesa**: feltro com as duas ações, o resto vira linha de texto |
 | 18/09 | `6cd5e1d` | **Mesa da carreira como mesa de verdade**: trilho, base curva, letreiro em arco, círculo de aposta; lateral vira placa |
 | 18/09 | `a022dba` | **Menu em fichas de cassino**: a linha de texto embaixo da mesa vira uma fileira de fichas |
-| 18/09 | COMMIT | Fichas do menu com o desenho da função no miolo, no lugar do naipe |
+| 18/09 | `f592ae0` | Fichas do menu com o desenho da função no miolo, no lugar do naipe |
 
 ---
 
