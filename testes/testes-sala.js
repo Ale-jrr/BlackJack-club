@@ -8,6 +8,7 @@ import {
   definirPronto, entrar, gerarCodigo, iniciar, jogadorDe, normalizarConfig,
   problemasNaConfig, ranking, recomprar, sair, tique, visaoPara,
 } from '../src/motor/sala.js';
+import { dealerDevePedir } from '../src/motor/assento.js';
 import { igual, teste, verdade } from './testes.js';
 
 const HOST = { id: 'p1', nome: 'Mayk', avatar: '🂡' };
@@ -663,4 +664,21 @@ teste('A visão diz quem é o crupiê', () => {
   igual(visao.crupieId, 'p1');
   igual(visao.jogadores.find((j) => j.id === 'p1').crupie, true);
   igual(visao.jogadores.find((j) => j.id === 'p2').crupie, false);
+});
+
+// ------------------------------------------------------- dealer joga para ganhar
+
+teste('Dealer da mesa cheia pede se estiver perdendo para qualquer um que parou', () => {
+  const parada = (texto) => ({ maos: [{ cartas: cartas(texto), status: STATUS_MAO.STAND }] });
+  const estourada = (texto) => ({ maos: [{ cartas: cartas(texto), status: STATUS_MAO.BUST }] });
+  const bj = { maos: [{ cartas: cartas('A♠ K♠'), status: STATUS_MAO.BLACKJACK }] };
+
+  verdade(dealerDevePedir(cartas('10♦ 8♣'), [parada('10♠ 7♥'), parada('K♠ Q♥')]),
+    '18 contra 17 e 20: pede por causa do 20');
+  verdade(!dealerDevePedir(cartas('10♦ 8♣'), [parada('10♠ 7♥'), parada('9♠ 9♥')]),
+    '18 contra 17 e 18: não perde para ninguém, para');
+  verdade(!dealerDevePedir(cartas('10♦ 8♣'), [estourada('K♠ Q♥ 5♣'), bj]),
+    'estouro e blackjack não fazem o dealer pedir');
+  verdade(dealerDevePedir(cartas('10♦ 6♣'), [estourada('K♠ Q♥ 5♣')]), 'com 16 sempre pede');
+  verdade(!dealerDevePedir(cartas('10♦ 5♣ 6♠'), [parada('10♠ Q♥')]), 'com 21 nunca pede');
 });

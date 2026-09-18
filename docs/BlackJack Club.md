@@ -33,20 +33,20 @@ servidor próprio. Nenhuma ficha vale dinheiro: não existe depósito, saque nem
 | repositório | https://github.com/Ale-jrr/BlackJack-club (branch `main`) |
 | hospedagem do site | Vercel, plano grátis, publica sozinha a cada `git push` |
 | servidor das salas | Supabase, projeto `blackjack-club`, id `zwltwqvddvacbgpswsac`, região São Paulo |
-| função do servidor | Edge Function `sala` (fonte em `servidor/sala/index.ts`), versão 4 |
+| função do servidor | Edge Function `sala` (fonte em `servidor/sala/index.ts`), versão 5 |
 | documento de projeto | o texto de 91 seções que o Mayk escreveu no começo; cada regra cita a seção (`§20`, `§56`…) |
 
 ---
 
 ## Estado em 2026-09-18
 
-**Testes:** 97 do motor e da sala, rodando no navegador, e 51 verificações contra o servidor
+**Testes:** 101 do motor e da sala, rodando no navegador, e 51 verificações contra o servidor
 publicado. Todos passando.
 
 **Pronto:**
 
 - **Carreira** — motor completo (6 baralhos, hit, stand, double, split até 4 mãos, split de
-  Áses, desistência, seguro 2:1, dealer para no 17 macio), saldo, XP, 100 níveis, missões,
+  Áses, desistência, seguro 2:1, dealer que joga para ganhar), saldo, XP, 100 níveis, missões,
   conquistas, bônus diário, histórico, estatísticas, 6 mesas por nível, som.
 - **Jogar com amigos** — criar sala com as regras do ADM, código e link de convite, senha
   opcional, salas abertas na tela inicial, lobby com pronto e nome editável, jogada **um por

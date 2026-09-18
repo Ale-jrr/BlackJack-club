@@ -27,6 +27,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `df3c5a0` | Mesa da carreira com bandeja, sapato e descarte; fichas de aposta com insertos; histórico com ficha de resultado |
 | 18/09 | `2affffe` | Aposta da sala deitada (círculo · fichas · botão); feltro não invade mais o painel; nome dos lugares volta ao tamanho |
 | 18/09 | `9afe829` | **Celular vê as cartas dos outros**: quadradinhos com cartas em miniatura; feltro cresce com a mesa |
+| 18/09 | COMMIT | **Dealer joga para ganhar** (carreira e sala); função `sala` republicada na versão 5 |
 
 ---
 

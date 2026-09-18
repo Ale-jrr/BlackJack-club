@@ -8,7 +8,7 @@
 
 import { criarShoe, precisaEmbaralhar, reembaralhar, comprar } from './baralho.js';
 import {
-  acoesDaMao, avancarMao, executarNoAssento, marcarBlackjack, novaMao,
+  acoesDaMao, avancarMao, dealerDevePedir, executarNoAssento, marcarBlackjack, novaMao,
   precisaDoDealer, resolverAssento, resumoDoDealer, temBlackjackNatural,
 } from './assento.js';
 import { valorDaMao } from './mao.js';
@@ -203,8 +203,8 @@ function turnoDealer(jogo) {
   emitir(jogo, 'revela-dealer');
 
   if (precisaDoDealer([jogo])) {
-    // Compra com 16 ou menos; para em 17, inclusive Soft 17 (§19).
-    while (valorDaMao(jogo.dealer.cartas).total < 17) {
+    // Compra com 16 ou menos e, acima disso, enquanto estiver perdendo (`dealerDevePedir`).
+    while (dealerDevePedir(jogo.dealer.cartas, [jogo])) {
       const carta = comprar(jogo.shoe);
       jogo.dealer.cartas.push(carta);
       emitir(jogo, 'carta-dealer', { carta });

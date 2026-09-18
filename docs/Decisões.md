@@ -24,6 +24,7 @@ Quando uma decisão aqui contradiz o documento original de 91 seções, **vale a
 | 18/09 | Banca do crupiê | **Da casa** (ele não ganha nem perde) | `sala.js` → `apostador` |
 | 18/09 | Menu em grade de cartões com ícone | **"Muita cara de IA."** Virou uma mesa de feltro com JOGAR e MESA COM AMIGOS. O resto virou linha de texto, que ele também não gostou; escolheu **fichas de cassino** (uma cor por item, nome embaixo) e pediu **o desenho da função no miolo** em vez do naipe ("é melhor") | `index.html` → `.mesa-entrada`; `app.js` → `pintarMenu` |
 | 18/09 | Cartas dos outros no celular | **Têm que aparecer** ("o mobile não consegue ver as cartas"). Antes ficavam escondidas pela §87 | `estilo.css`, bloco `max-width: 760px` |
+| 18/09 | Regra do dealer | **Joga para ganhar**: pede com 16 ou menos e, com 17 ou mais, continua pedindo enquanto alguma mão parada estiver na frente dele. Empatado ou na frente, para. Vale para a carreira e para a sala | `assento.js` → `dealerDevePedir` |
 | 18/09 | Valor da aposta na sala | **O jogador escolhe qualquer valor**, não só os fixos | `salas.js` → `montarPainelDeAposta` |
 
 ---

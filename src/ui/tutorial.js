@@ -236,23 +236,29 @@ const CAPITULOS = [
     nome: 'O dealer',
     montar(caixa) {
       caixa.append(paragrafo(
-        `O dealer não escolhe nada. Ele segue uma regra fixa, e é justamente por isso que dá para
-         jogar contra ele com estratégia.`));
+        `No cassino o dealer para no 17 mesmo quando está perdendo. <b>Aqui não: o dealer desta
+         casa joga para ganhar.</b> Ele segue uma regra fixa, sem escolher nada, mas a regra
+         não deixa ele parar atrás de você.`));
       caixa.append(fileira(
         exemplo({ titulo: 'Com 16 ou menos', cartas: '10♠ 6♥', valor: 'compra', cor: 'ruim',
-          nota: 'Ele é obrigado a pedir carta.' }),
-        exemplo({ titulo: 'Com 17 ou mais', cartas: '10♠ 7♥', valor: 'para', cor: 'boa',
-          nota: 'Ele é obrigado a parar.' }),
-        exemplo({ titulo: 'Soft 17', cartas: 'A♠ 6♥', valor: 'para', cor: 'boa',
-          nota: 'Nesta mesa o dealer <b>para</b> também no 17 macio.' }),
+          nota: 'Sempre pede carta.' }),
+        exemplo({ titulo: '17 ou mais, na frente', cartas: '10♠ 8♥', valor: 'para', cor: 'boa',
+          nota: 'Contra o seu 17, ele para: já ganhou.' }),
+        exemplo({ titulo: '17 ou mais, atrás', cartas: '10♠ 8♥', valor: 'compra', cor: 'ruim',
+          nota: 'Contra o seu 20, ele pede, e pode estourar.' }),
       ));
+      caixa.append(paragrafo(
+        `Empatado, ele não arrisca: 18 contra 18 é empate e ele para. Com vários jogadores na
+         mesa, basta <b>um</b> que parou na frente dele para ele pedir, mesmo que isso o faça
+         estourar contra todos. Ele para no 21, e o seu Blackjack ele não alcança.`));
       caixa.append(paragrafo(
         `Ele recebe uma carta aberta e uma escondida. Você decide olhando só para a aberta.
          Quando ela é um Ás ou vale 10, o sistema confere a escondida antes de você jogar, para
          resolver logo se já é Blackjack dele.`));
       caixa.append(paragrafo(
         `A carta aberta muda tudo: contra <b>2 a 6</b> o dealer estoura com frequência, e vale a
-         pena parar cedo. Contra <b>7 a Ás</b>, ele costuma fechar mão alta, e parar com 15 raramente resolve.`));
+         pena parar cedo. Contra <b>7 a Ás</b>, ele costuma fechar mão alta, e parar com 15 raramente resolve.
+         E lembre: parar com mão alta obriga o dealer a ir atrás de você — é aí que ele estoura.`));
     },
   },
 

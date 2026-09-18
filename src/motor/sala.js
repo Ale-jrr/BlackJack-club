@@ -10,7 +10,7 @@
 
 import { criarShoe, precisaEmbaralhar, reembaralhar, comprar } from './baralho.js';
 import {
-  acoesDaMao, avancarMao, executarNoAssento, marcarBlackjack, novaMao,
+  acoesDaMao, avancarMao, dealerDevePedir, executarNoAssento, marcarBlackjack, novaMao,
   precisaDoDealer, resolverAssento, resumoDoDealer,
 } from './assento.js';
 import { valorDaMao } from './mao.js';
@@ -499,7 +499,7 @@ function turnoDoDealer(sala, agora) {
 
   const naRodada = jogadoresNaRodada(sala);
   if (precisaDoDealer(naRodada)) {
-    while (valorDaMao(sala.dealer.cartas).total < 17) {
+    while (dealerDevePedir(sala.dealer.cartas, naRodada)) {
       sala.dealer.cartas.push(comprar(sala.shoe));
     }
   }

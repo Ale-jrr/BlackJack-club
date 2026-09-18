@@ -209,6 +209,19 @@ export function resolverAssento(assento, dealer) {
   return devolvido;
 }
 
+// O dealer desta casa joga para ganhar (decisão do Mayk, contra a regra fixa de
+// cassino): compra com 16 ou menos, como sempre, e continua comprando enquanto
+// alguma mão parada na mesa estiver na frente dele. Para no 21 ou quando estoura.
+// Blackjack do jogador não conta: com carta nenhuma o dealer passa de um blackjack.
+export function dealerDevePedir(cartasDoDealer, assentos) {
+  const total = valorDaMao(cartasDoDealer).total;
+  if (total >= 21) return false;
+  if (total < 17) return true;
+  return assentos.some((a) => a.maos.some((m) => (
+    m.status === STATUS_MAO.STAND && valorDaMao(m.cartas).total > total
+  )));
+}
+
 // O dealer só compra se alguém ainda pode ganhar dele.
 export function precisaDoDealer(assentos) {
   return assentos.some((a) => a.maos.some((m) => m.status === STATUS_MAO.STAND));

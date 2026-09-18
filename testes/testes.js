@@ -71,8 +71,8 @@ teste('Blackjack paga 3:2', () => {
 });
 
 teste('Vitória normal paga 1:1', () => {
-  // Jogador 20, dealer 18.
-  const jogo = jogoComCartas('K♠ 9♦ Q♥ 9♣', { saldo: 10000, aposta: 1000 });
+  // Jogador 20, dealer 18: perdendo, o dealer pede o K e estoura.
+  const jogo = jogoComCartas('K♠ 9♦ Q♥ 9♣ K♣', { saldo: 10000, aposta: 1000 });
   executar(jogo, ACOES.PARAR);
   igual(jogo.resultado.maos[0].resultado, STATUS_MAO.WIN, 'resultado');
   igual(jogo.resultado.lucro, 1000, 'lucro');
@@ -105,13 +105,37 @@ teste('Dealer estourado paga todo mundo que parou', () => {
 
 // ------------------------------------------------------------------ dealer
 
-teste('Dealer para no Soft 17', () => {
-  const jogo = jogoComCartas('10♠ A♦ 8♥ 6♣ 9♠', { saldo: 10000, aposta: 100 });
+// O dealer joga para ganhar: com 17 ou mais só para se não estiver perdendo.
+teste('Dealer para no Soft 17 quando já está na frente', () => {
+  const jogo = jogoComCartas('10♠ A♦ 6♥ 6♣ 9♠', { saldo: 10000, aposta: 100 });
   executar(jogo, ACOES.RECUSAR_SEGURO);
-  executar(jogo, ACOES.PARAR);   // jogador 18, dealer A+6 = 17 macio
+  executar(jogo, ACOES.PARAR);   // jogador 16, dealer A+6 = 17 macio
   igual(jogo.dealer.cartas.length, 2, 'não comprou');
-  igual(jogo.resultado.dealer, 17, 'valor do dealer');
-  igual(jogo.resultado.maos[0].resultado, STATUS_MAO.WIN, '18 vence 17');
+  igual(jogo.resultado.maos[0].resultado, STATUS_MAO.LOSE, '17 vence 16');
+});
+
+teste('Dealer empatado no 17 não arrisca', () => {
+  const jogo = jogoComCartas('10♠ 10♦ 7♥ 7♣ 9♠', { saldo: 10000, aposta: 100 });
+  executar(jogo, ACOES.PARAR);   // jogador 17, dealer 17
+  igual(jogo.dealer.cartas.length, 2, 'não comprou');
+  igual(jogo.resultado.maos[0].resultado, STATUS_MAO.PUSH, 'empate');
+});
+
+teste('Dealer com 17 perdendo para 18 continua pedindo', () => {
+  const jogo = jogoComCartas('10♠ A♦ 8♥ 6♣ 9♠ 3♣', { saldo: 10000, aposta: 100 });
+  executar(jogo, ACOES.RECUSAR_SEGURO);
+  executar(jogo, ACOES.PARAR);   // jogador 18; dealer A+6 → +9 = 16 → +3 = 19
+  igual(jogo.dealer.cartas.length, 4, 'comprou duas');
+  igual(jogo.resultado.dealer, 19, 'valor do dealer');
+  igual(jogo.resultado.maos[0].resultado, STATUS_MAO.LOSE, '19 vence 18');
+});
+
+teste('Dealer com 20 perdendo para 21 pede e pode estourar', () => {
+  const jogo = jogoComCartas('7♠ K♦ 7♥ Q♣ 7♣ 5♠', { saldo: 10000, aposta: 100 });
+  executar(jogo, ACOES.PEDIR);   // jogador 7+7+7 = 21
+  // dealer K+Q = 20, perdendo para 21: pede o 5 e estoura
+  verdade(jogo.resultado.dealerEstourou, 'dealer estourou');
+  igual(jogo.resultado.maos[0].resultado, STATUS_MAO.WIN, '21 vence');
 });
 
 teste('Dealer compra com 16', () => {
@@ -124,8 +148,9 @@ teste('Dealer compra com 16', () => {
 // ------------------------------------------------------------------ double
 
 teste('Double dobra a aposta e dá uma carta só', () => {
-  // Jogador 6+5 = 11, dobra e recebe 9 (20). Dealer 9+7 = 16, compra 2 e para em 18.
-  const jogo = jogoComCartas('6♠ 9♦ 5♥ 7♣ 9♠ 2♦', { saldo: 10000, aposta: 500 });
+  // Jogador 6+5 = 11, dobra e recebe 9 (20). Dealer 9+7 = 16, compra 2 (18), ainda
+  // perde para 20, compra o K e estoura.
+  const jogo = jogoComCartas('6♠ 9♦ 5♥ 7♣ 9♠ 2♦ K♥', { saldo: 10000, aposta: 500 });
   verdade(acoesDisponiveis(jogo).includes(ACOES.DOBRAR), 'dobrar disponível');
   executar(jogo, ACOES.DOBRAR);
   igual(jogo.maos[0].cartas.length, 3, 'uma carta só');
@@ -163,8 +188,8 @@ teste('Split de dez e valete é permitido (mesmo valor)', () => {
 });
 
 teste('Split de Áses dá uma carta em cada e para', () => {
-  // Dealer 10+8 = 18 e para; cada Ás recebe uma figura e faz 21.
-  const jogo = jogoComCartas('A♠ 10♦ A♥ 8♣ K♠ Q♥', { saldo: 10000, aposta: 500 });
+  // Cada Ás recebe uma figura e faz 21; o dealer (10+8 = 18) pede o 5 e estoura.
+  const jogo = jogoComCartas('A♠ 10♦ A♥ 8♣ K♠ Q♥ 5♦', { saldo: 10000, aposta: 500 });
   executar(jogo, ACOES.DIVIDIR);
   igual(jogo.estado, ESTADOS.RESULTADO, 'rodada resolvida sem mais ações');
   igual(jogo.maos[0].cartas.length, 2, 'primeira mão parou em duas cartas');
