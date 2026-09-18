@@ -22,6 +22,7 @@ Quando uma decisão aqui contradiz o documento original de 91 seções, **vale a
 | 18/09 | Otimizar chamadas ao servidor | Sim | `servidor.js` → `assinar` |
 | 18/09 | Crupiê: decide ou segue regra? | **Joga livre** | `sala.js` → `agirComoCrupie` |
 | 18/09 | Banca do crupiê | **Da casa** (ele não ganha nem perde) | `sala.js` → `apostador` |
+| 18/09 | Menu em grade de cartões com ícone | **"Muita cara de IA."** Virou uma mesa de feltro com JOGAR e MESA COM AMIGOS; o resto é uma linha de texto, sem ícone, caixa nem subtítulo | `index.html` → `.mesa-entrada`; `app.js` → `pintarMenu` |
 | 18/09 | Valor da aposta na sala | **O jogador escolhe qualquer valor**, não só os fixos | `salas.js` → `montarPainelDeAposta` |
 
 ---
@@ -40,8 +41,6 @@ Quando uma decisão aqui contradiz o documento original de 91 seções, **vale a
 | A aposta de cada rodada começa **na anterior**, se couber; senão, na mínima | quem aposta sempre o mesmo não precisa redigitar |
 | Salas em partida **também aparecem** na lista, como "entra para assistir" | lista só de salas esperando fica vazia quase sempre |
 | Fontes: **Cinzel** no logo, títulos, feltro e cantos das cartas; **Manrope** no resto | Cinzel é maiúscula romana de letreiro de cassino; Manrope é legível pequena e tem números retos. Mayk pediu "mais bonito, as fontes e etc" |
-| Ícones do menu **desenhados em traço** (SVG em `app.js` → `ICONES`), não emoji | emoji muda de cara em cada sistema e no Windows 10 parecia improviso |
-| Grade do menu com **5 colunas** (2 abaixo de 1020px, 1 no celular) e bônus em **faixa inteira** | com auto-fit sobrava botão sozinho na última linha |
 | A senha da sala é guardada **em hash** | ninguém, nem com acesso ao banco, lê a senha |
 | Sala parada **12 horas** é apagada | sala de teste e de sábado à noite não ficam para sempre |
 

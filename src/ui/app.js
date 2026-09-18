@@ -146,65 +146,52 @@ function perguntar(titulo, texto, aoConfirmar) {
 
 // ------------------------------------------------------------------- menu
 
-// Ícones do menu desenhados em traço, na cor do texto. Emoji muda de cara em cada sistema
-// (no Windows 10 fica com jeito de improviso); o traço dourado fica igual em todo lugar.
-const traco = (corpo) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
-  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${corpo}</svg>`;
-const ICONES = {
-  jogar: traco('<rect x="3" y="6" width="11" height="15" rx="2" transform="rotate(-10 8.5 13.5)"/><rect x="9" y="3" width="11" height="15" rx="2" transform="rotate(8 14.5 10.5)"/><path d="M14.6 8.2c-1.2 1.1-2.2 1.9-2.2 3a1.3 1.3 0 0 0 2.2.9 1.3 1.3 0 0 0 2.2-.9c0-1.1-1-1.9-2.2-3z"/>'),
-  amigos: traco('<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.8 14.6c2.4-.2 4.3 1.3 4.8 4.4"/>'),
-  missoes: traco('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>'),
-  ranking: traco('<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/>'),
-  perfil: traco('<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.9-3.9 3.8-6.2 7.5-6.2s6.6 2.3 7.5 6.2"/>'),
-  stats: traco('<path d="M4 20h16"/><rect x="5.5" y="11" width="3" height="7" rx=".6"/><rect x="10.5" y="6" width="3" height="12" rx=".6"/><rect x="15.5" y="13.5" width="3" height="4.5" rx=".6"/>'),
-  tutorial: traco('<path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c1.4 1.6 3.3 2.4 5.5 2.4s4.1-.8 5.5-2.4V11"/><path d="M21.5 9v5"/>'),
-  loja: traco('<path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>'),
-  config: traco('<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>'),
-  bonus: traco('<rect x="3.5" y="9" width="17" height="4" rx="1"/><path d="M5 13v7h14v-7M12 9v11"/><path d="M12 9c-1.5-3.5-5.5-4-5.5-1.5S10 9 12 9zM12 9c1.5-3.5 5.5-4 5.5-1.5S14 9 12 9z"/>'),
-};
+const ACOES_ENTRADA = [
+  { titulo: 'JOGAR', sub: 'carreira contra o dealer', classe: 'principal', acao: () => ir('mesas') },
+  { titulo: 'MESA COM AMIGOS', sub: 'salas de até 10', classe: 'secundaria', acao: () => abrirAmigos() },
+];
 
 const ITENS_MENU = [
-  { id: 'jogar', icone: ICONES.jogar, titulo: 'JOGAR', sub: 'Modo carreira contra o dealer', destaque: true, acao: () => ir('mesas') },
-  { id: 'amigos', icone: ICONES.amigos, titulo: 'JOGAR COM AMIGOS', sub: 'Salas de até 10 jogadores',
-    acao: () => abrirAmigos() },
-  { id: 'missoes', icone: ICONES.missoes, titulo: 'MISSÕES', sub: 'Diárias, semanais e bônus', acao: () => ir('missoes') },
-  { id: 'ranking', icone: ICONES.ranking, titulo: 'RANKING', sub: 'Seus números do clube', acao: () => ir('perfil') },
-  { id: 'perfil', icone: ICONES.perfil, titulo: 'PERFIL', sub: 'Nome, avatar e conquistas', acao: () => ir('perfil') },
-  { id: 'stats', icone: ICONES.stats, titulo: 'ESTATÍSTICAS', sub: 'Números e histórico', acao: () => ir('estatisticas') },
-  { id: 'tutorial', icone: ICONES.tutorial, titulo: 'COMO SE JOGA', sub: 'Regras, contas e um teste', acao: () => abrirTutorial() },
-  { id: 'loja', icone: ICONES.loja, titulo: 'LOJA', sub: 'Cosméticos do clube', selo: 'em breve', acao: () => modal(
+  { titulo: 'Missões', acao: () => ir('missoes') },
+  { titulo: 'Ranking', acao: () => ir('perfil') },
+  { titulo: 'Perfil', acao: () => ir('perfil') },
+  { titulo: 'Estatísticas', acao: () => ir('estatisticas') },
+  { titulo: 'Como se joga', acao: () => abrirTutorial() },
+  { titulo: 'Loja', breve: true, acao: () => modal(
       'Loja',
       `<p>A loja é só cosmética: baralhos, mesas, fichas, molduras e efeitos. Nada nela muda
         a chance de nenhuma mão.</p>
        <p>Ela entra depois da progressão, junto com as mesas desbloqueáveis por nível.</p>`,
       [{ texto: 'ENTENDI', classe: 'ouro' }]) },
-  { id: 'config', icone: ICONES.config, titulo: 'CONFIGURAÇÕES', sub: 'Som, tutorial e dados', acao: () => ir('config') },
+  { titulo: 'Configurações', acao: () => ir('config') },
 ];
 
 function pintarMenu() {
-  const grade = $('menu-grade');
-  grade.innerHTML = '';
-  for (const item of ITENS_MENU) {
+  const acoes = $('acoes-entrada');
+  acoes.innerHTML = '';
+  for (const item of ACOES_ENTRADA) {
     const b = document.createElement('button');
-    b.className = `menu-botao${item.destaque ? ' destaque' : ''}`;
-    b.innerHTML = `<span class="icone">${item.icone}</span>
-      <span><b>${item.titulo}</b><span>${item.sub}</span></span>
-      ${item.selo ? `<span class="selo">${item.selo}</span>` : ''}`;
+    b.className = `acao-entrada ${item.classe}`;
+    b.innerHTML = `<b>${item.titulo}</b><span>${item.sub}</span>`;
     b.onclick = () => { som.botao(); item.acao(); };
-    grade.append(b);
+    acoes.append(b);
   }
 
-  if (bonusDisponivel(perfil)) {
-    // O bônus é um aviso, não um item fixo: ocupa a linha inteira e não deixa a grade
-    // com um botão sozinho no fim.
+  const cardapio = $('menu-grade');
+  cardapio.innerHTML = '';
+  for (const item of ITENS_MENU) {
     const b = document.createElement('button');
-    b.className = 'menu-botao bonus';
-    b.innerHTML = `<span class="icone">${ICONES.bonus}</span>
-      <span><b>BÔNUS DIÁRIO</b><span>Suas fichas do dia estão esperando</span></span>
-      <span class="pegar">PEGAR</span>`;
-    b.onclick = () => { som.botao(); ir('missoes'); };
-    grade.append(b);
+    b.className = `item-cardapio${item.breve ? ' breve' : ''}`;
+    b.innerHTML = item.breve ? `${item.titulo} <small>em breve</small>` : item.titulo;
+    b.onclick = () => { som.botao(); item.acao(); };
+    cardapio.append(b);
   }
+
+  // O bônus é um recado do dealer, não mais um botão: uma frase no feltro.
+  const bonus = $('aviso-bonus');
+  bonus.hidden = !bonusDisponivel(perfil);
+  bonus.innerHTML = 'Seu bônus do dia está na mesa — <u>pegar fichas</u>';
+  bonus.onclick = () => { som.botao(); ir('missoes'); };
 }
 
 // ------------------------------------------------------------------ mesas

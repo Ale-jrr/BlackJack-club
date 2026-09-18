@@ -88,4 +88,8 @@ segunda cópia, os dois modos vão divergir em silêncio.
 - **Fontes** carregam do Google Fonts no `index.html`. No CSS: `--fonte` (Manrope) e
   `--fonte-titulo` (Cinzel). Sem internet, caem nas fontes do sistema.
 - **Números** usam `tabular-nums` no `body`: saldo e cronômetro não tremem.
-- **Ícones do menu**: `ICONES` em `app.js`, SVG de traço com `currentColor`.
+- **Menu**: `.mesa-entrada` (feltro com trilho e curva, em `estilo.css`) recebe as duas
+  ações de `ACOES_ENTRADA`; `.cardapio` recebe `ITENS_MENU` como texto. Evitar voltar à
+  grade de cartões com ícone: o Mayk achou com "muita cara de IA".
+- **Cuidado com nome de classe**: `.entrada` já é o campo de texto. Por isso a mesa do
+  menu se chama `.mesa-entrada`.

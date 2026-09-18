@@ -139,88 +139,114 @@ main { height: calc(100% - var(--topo)); overflow: hidden; }
 
 #tela-menu .folha { max-width: 1240px; }
 
-.hero { text-align: center; padding: clamp(10px, 3vh, 34px) 0 6px; }
-.hero .marca {
+/* A entrada: mesa de blackjack vista de cima. Feltro, trilho dourado em volta e a
+   borda de baixo curva, que é o lado onde os jogadores sentam. */
+.mesa-entrada {
+  position: relative; text-align: center;
+  padding: clamp(34px, 6vh, 64px) clamp(16px, 4vw, 48px) clamp(56px, 9vh, 96px);
+  background:
+    radial-gradient(90% 70% at 50% 0%, rgba(255,255,255,.07), transparent 60%),
+    radial-gradient(120% 100% at 50% 20%, var(--feltro-claro) 0%, var(--feltro) 50%, #06201a 100%);
+  border: 3px solid #6b4f1c;
+  border-radius: 28px 28px 50% 50% / 28px 28px 22% 22%;
+  box-shadow:
+    inset 0 0 0 6px #0a2a21,
+    inset 0 0 0 7px rgba(217,180,91,.45),
+    inset 0 18px 60px rgba(0,0,0,.35),
+    0 24px 60px rgba(0,0,0,.6);
+  overflow: hidden;
+}
+/* Trama do feltro: listras finíssimas, só para o verde não parecer tinta chapada. */
+.mesa-entrada::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background: repeating-linear-gradient(45deg, rgba(0,0,0,.05) 0 2px, transparent 2px 4px);
+}
+.mesa-entrada > * { position: relative; }
+
+.mesa-entrada .marca {
   font-family: var(--fonte-titulo);
-  font-size: clamp(32px, 6.8vw, 68px);
-  font-weight: 800; letter-spacing: .08em; line-height: 1.05;
+  font-size: clamp(34px, 7vw, 76px);
+  font-weight: 800; letter-spacing: .08em; line-height: 1.02;
   background: linear-gradient(180deg, #fff1c9 0%, var(--ouro-forte) 38%, #b88a32 72%, #8a6420 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 10px 28px rgba(217,180,91,.18));
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,.6));
 }
-/* Naipes entre dois filetes dourados, como o friso de uma mesa. */
-.hero .naipes {
+.mesa-entrada .naipes {
   display: flex; align-items: center; justify-content: center; gap: 12px;
-  font-size: clamp(16px, 2.4vw, 22px); letter-spacing: 8px; margin-top: 10px; color: var(--creme);
+  font-size: clamp(15px, 2.2vw, 20px); letter-spacing: 8px; margin-top: 12px; color: var(--creme);
 }
-.hero .naipes::before, .hero .naipes::after {
-  content: ''; height: 1px; width: clamp(40px, 12vw, 140px);
-  background: linear-gradient(90deg, transparent, rgba(217,180,91,.7));
+.mesa-entrada .naipes::before, .mesa-entrada .naipes::after {
+  content: ''; height: 1px; width: clamp(40px, 12vw, 150px);
+  background: linear-gradient(90deg, transparent, rgba(217,180,91,.8));
 }
-.hero .naipes::after { transform: scaleX(-1); }
-.hero .naipes .r { color: var(--vermelho); }
-.hero .sub { color: var(--cinza); margin-top: 10px; font-size: clamp(12px, 1.6vw, 15px); letter-spacing: .2px; }
+.mesa-entrada .naipes::after { transform: scaleX(-1); }
+.mesa-entrada .naipes .r { color: var(--vermelho); }
 
-/* Colunas fixas em vez de auto-fit: com 5 (JOGAR ocupa duas) e com 2 as linhas fecham
-   certinho; o auto-fit escolhia 4 ou 3 e deixava botão sozinho no fim. */
-.menu-grade {
-  display: grid; gap: clamp(10px, 1.6vw, 16px);
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+.acoes-entrada {
+  display: flex; justify-content: center; gap: clamp(10px, 2vw, 18px); flex-wrap: wrap;
+  margin-top: clamp(26px, 4.5vh, 42px);
 }
-@media (max-width: 1020px) { .menu-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.acao-entrada {
+  min-width: min(100%, 250px); padding: 15px 30px; border-radius: 999px;
+  display: grid; gap: 2px; justify-items: center;
+  transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
+}
+.acao-entrada b { font-size: clamp(15px, 1.8vw, 18px); font-weight: 800; letter-spacing: .12em; }
+.acao-entrada span { font-size: 12px; font-weight: 600; letter-spacing: .04em; opacity: .72; }
+.acao-entrada:hover { transform: translateY(-2px); }
+.acao-entrada.principal {
+  background: linear-gradient(180deg, #f6dc98, var(--ouro) 55%, #a8812c);
+  color: #1d1504;
+  box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 10px 24px rgba(0,0,0,.45);
+}
+.acao-entrada.principal:hover { box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 14px 30px rgba(0,0,0,.5); }
+.acao-entrada.secundaria {
+  color: var(--creme); background: rgba(4,20,15,.45);
+  border: 1.5px solid rgba(242,238,227,.55);
+}
+.acao-entrada.secundaria:hover { background: rgba(4,20,15,.7); border-color: var(--creme); }
 
-.menu-botao {
-  position: relative;
-  display: flex; align-items: center; gap: 14px;
-  padding: clamp(16px, 2.2vw, 22px);
-  border-radius: var(--raio);
-  background: linear-gradient(150deg, rgba(23,32,28,.95), rgba(12,17,15,.95));
-  border: 1px solid rgba(217, 180, 91, .2);
-  text-align: left;
-  transition: transform .14s ease, border-color .14s ease, background .14s ease;
+.aviso-bonus {
+  display: block; margin: 18px auto 0; font-size: 14px; color: var(--ouro-forte); font-weight: 600;
 }
-.menu-botao:hover { transform: translateY(-3px); border-color: var(--ouro); }
-.menu-botao .icone {
-  width: 46px; height: 46px; display: grid; place-items: center; flex: none;
-  border-radius: 13px; color: var(--ouro-forte);
-  background: radial-gradient(circle at 30% 25%, rgba(240,207,130,.2), rgba(217,180,91,.06));
-  border: 1px solid rgba(217,180,91,.28);
-  transition: color .14s ease, background .14s ease;
-}
-.menu-botao .icone svg { width: 25px; height: 25px; }
-.menu-botao:hover .icone { color: #fff1c9; background: radial-gradient(circle at 30% 25%, rgba(240,207,130,.32), rgba(217,180,91,.1)); }
-.menu-botao b { display: block; font-size: clamp(13.5px, 1.5vw, 15.5px); font-weight: 800; letter-spacing: .06em; }
-.menu-botao span { display: block; font-size: 12.5px; color: var(--cinza); margin-top: 3px; font-weight: 500; line-height: 1.35; }
-.menu-botao.destaque {
-  grid-column: span 2;
-  background:
-    radial-gradient(120% 140% at 0% 0%, rgba(94,214,143,.16), transparent 55%),
-    linear-gradient(140deg, #14513e, #0b2b22);
-  border-color: var(--ouro);
-}
-.menu-botao.destaque b { font-family: var(--fonte-titulo); font-size: clamp(18px, 2.2vw, 24px); letter-spacing: .1em; }
-.menu-botao.destaque .icone { width: 54px; height: 54px; }
-.menu-botao.destaque .icone svg { width: 30px; height: 30px; }
+.aviso-bonus u { text-underline-offset: 3px; }
+.aviso-bonus:hover u { color: #fff1c9; }
 
-/* Bônus do dia: faixa dourada de largura inteira, no fim da grade. */
-.menu-botao.bonus {
-  grid-column: 1 / -1;
-  background: linear-gradient(100deg, rgba(217,180,91,.2), rgba(217,180,91,.05) 60%, rgba(23,32,28,.95));
-  border-color: var(--ouro);
+/* Letreiro impresso no feltro, como o "BLACKJACK PAGA 3 PARA 2" de uma mesa. */
+.mesa-entrada .letreiro {
+  margin-top: clamp(22px, 4vh, 36px);
+  font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+  color: rgba(242,238,227,.5);
 }
-.menu-botao.bonus > span:nth-child(2) { flex: 1; }
-.menu-botao.bonus .pegar {
-  font-size: 12.5px; font-weight: 800; letter-spacing: .1em; color: var(--preto); margin: 0;
-  background: linear-gradient(180deg, var(--ouro-forte), var(--ouro)); padding: 9px 18px; border-radius: 999px;
+
+/* O resto da casa: uma linha de texto, sem caixa nem ícone. */
+.cardapio {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  gap: 4px clamp(6px, 1.4vw, 14px);
+  padding: 2px 0 6px;
 }
-.menu-botao .selo {
-  position: absolute; top: 10px; right: 12px;
-  font-size: 10.5px; font-weight: 800; color: var(--preto);
-  background: var(--verde); padding: 2px 8px; border-radius: 999px;
+.item-cardapio {
+  position: relative; padding: 10px 8px;
+  font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  color: rgba(242,238,227,.78);
+  transition: color .14s ease;
 }
-@media (max-width: 480px) {
-  .menu-grade { grid-template-columns: 1fr; }
-  .menu-botao.destaque { grid-column: span 1; }
+.item-cardapio:not(:last-child)::after {
+  content: '·'; position: absolute; right: calc(-1 * clamp(6px, 1.4vw, 14px) / 2 - 3px);
+  color: rgba(217,180,91,.6); letter-spacing: 0;
+}
+.item-cardapio:hover { color: var(--ouro-forte); }
+.item-cardapio.breve { color: rgba(242,238,227,.4); }
+.item-cardapio small { font-size: 10px; letter-spacing: .06em; text-transform: none; font-weight: 600; font-style: italic; }
+
+/* No celular o cardápio vira lista de duas colunas com filete entre as linhas. */
+@media (max-width: 560px) {
+  .mesa-entrada { border-radius: 22px 22px 50% 50% / 22px 22px 12% 12%; }
+  .acao-entrada { width: 100%; }
+  .cardapio { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .item-cardapio { padding: 14px 6px; border-bottom: 1px solid rgba(217,180,91,.14); }
+  .item-cardapio::after { display: none; }
+  .item-cardapio:last-child:nth-child(odd) { grid-column: 1 / -1; border-bottom: 0; }
 }
 
 /* ------------------------------------------------------------- mesa/jogo */
