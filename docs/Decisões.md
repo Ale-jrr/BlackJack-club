@@ -22,7 +22,7 @@ Quando uma decisão aqui contradiz o documento original de 91 seções, **vale a
 | 18/09 | Otimizar chamadas ao servidor | Sim | `servidor.js` → `assinar` |
 | 18/09 | Crupiê: decide ou segue regra? | **Joga livre** | `sala.js` → `agirComoCrupie` |
 | 18/09 | Banca do crupiê | **Da casa** (ele não ganha nem perde) | `sala.js` → `apostador` |
-| 18/09 | Menu em grade de cartões com ícone | **"Muita cara de IA."** Virou uma mesa de feltro com JOGAR e MESA COM AMIGOS; o resto é uma linha de texto, sem ícone, caixa nem subtítulo | `index.html` → `.mesa-entrada`; `app.js` → `pintarMenu` |
+| 18/09 | Menu em grade de cartões com ícone | **"Muita cara de IA."** Virou uma mesa de feltro com JOGAR e MESA COM AMIGOS. O resto virou linha de texto, que ele também não gostou; escolheu **fichas de cassino** (uma cor por item, naipe no miolo, nome embaixo) | `index.html` → `.mesa-entrada`; `app.js` → `pintarMenu` |
 | 18/09 | Valor da aposta na sala | **O jogador escolhe qualquer valor**, não só os fixos | `salas.js` → `montarPainelDeAposta` |
 
 ---

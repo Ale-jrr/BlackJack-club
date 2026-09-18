@@ -151,19 +151,20 @@ const ACOES_ENTRADA = [
   { titulo: 'MESA COM AMIGOS', sub: 'salas de até 10', classe: 'secundaria', acao: () => abrirAmigos() },
 ];
 
+// Cada item é uma ficha de cassino, com a cor de um valor de verdade e um naipe no miolo.
 const ITENS_MENU = [
-  { titulo: 'Missões', acao: () => ir('missoes') },
-  { titulo: 'Ranking', acao: () => ir('perfil') },
-  { titulo: 'Perfil', acao: () => ir('perfil') },
-  { titulo: 'Estatísticas', acao: () => ir('estatisticas') },
-  { titulo: 'Como se joga', acao: () => abrirTutorial() },
-  { titulo: 'Loja', breve: true, acao: () => modal(
+  { titulo: 'Missões', cor: '#2f6fd0', naipe: '♠', acao: () => ir('missoes') },
+  { titulo: 'Ranking', cor: '#1f8a55', naipe: '♥', acao: () => ir('perfil') },
+  { titulo: 'Perfil', cor: '#b8322f', naipe: '♦', acao: () => ir('perfil') },
+  { titulo: 'Estatísticas', cor: '#6a3cb0', naipe: '♣', acao: () => ir('estatisticas') },
+  { titulo: 'Como se joga', cor: '#c9962e', naipe: '♠', acao: () => abrirTutorial() },
+  { titulo: 'Loja', cor: '#5f6b70', naipe: '♥', breve: true, acao: () => modal(
       'Loja',
       `<p>A loja é só cosmética: baralhos, mesas, fichas, molduras e efeitos. Nada nela muda
         a chance de nenhuma mão.</p>
        <p>Ela entra depois da progressão, junto com as mesas desbloqueáveis por nível.</p>`,
       [{ texto: 'ENTENDI', classe: 'ouro' }]) },
-  { titulo: 'Configurações', acao: () => ir('config') },
+  { titulo: 'Configurações', cor: '#23292c', naipe: '♦', acao: () => ir('config') },
 ];
 
 function pintarMenu() {
@@ -181,8 +182,10 @@ function pintarMenu() {
   cardapio.innerHTML = '';
   for (const item of ITENS_MENU) {
     const b = document.createElement('button');
-    b.className = `item-cardapio${item.breve ? ' breve' : ''}`;
-    b.innerHTML = item.breve ? `${item.titulo} <small>em breve</small>` : item.titulo;
+    b.className = `ficha-menu${item.breve ? ' breve' : ''}`;
+    b.style.setProperty('--cor', item.cor);
+    b.innerHTML = `<span class="disco"><span class="miolo">${item.naipe}</span></span>
+      <span class="nome">${item.titulo}${item.breve ? '<small>em breve</small>' : ''}</span>`;
     b.onclick = () => { som.botao(); item.acao(); };
     cardapio.append(b);
   }

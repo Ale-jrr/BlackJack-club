@@ -219,34 +219,69 @@ main { height: calc(100% - var(--topo)); overflow: hidden; }
   color: rgba(242,238,227,.5);
 }
 
-/* O resto da casa: uma linha de texto, sem caixa nem ícone. */
-.cardapio {
-  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-  gap: 4px clamp(6px, 1.4vw, 14px);
-  padding: 2px 0 6px;
+/* O resto da casa: uma fileira de fichas de cassino embaixo da mesa. A borda tem os
+   "insertos" brancos de ficha de verdade; o miolo leva um naipe; a espessura vem de uma
+   sombra sólida mais escura embaixo. */
+.fichas-menu {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: clamp(14px, 2.4vw, 30px) clamp(12px, 2.6vw, 34px);
+  padding: 6px 0 4px;
 }
-.item-cardapio {
-  position: relative; padding: 10px 8px;
-  font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
-  color: rgba(242,238,227,.78);
-  transition: color .14s ease;
+.ficha-menu {
+  display: grid; justify-items: center; gap: 10px; width: 92px;
+  --lado: clamp(62px, 6.2vw, 78px);
 }
-.item-cardapio:not(:last-child)::after {
-  content: '·'; position: absolute; right: calc(-1 * clamp(6px, 1.4vw, 14px) / 2 - 3px);
-  color: rgba(217,180,91,.6); letter-spacing: 0;
+.ficha-menu .disco {
+  position: relative; width: var(--lado); aspect-ratio: 1; border-radius: 50%;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(circle, var(--cor) 0 55%, transparent 56%),
+    repeating-conic-gradient(from 9deg, #f4f1ea 0 18deg, var(--cor) 18deg 60deg);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.35),
+    0 4px 0 color-mix(in srgb, var(--cor) 55%, #000),
+    0 12px 20px rgba(0,0,0,.5);
+  transition: transform .18s cubic-bezier(.2,.8,.3,1.3), box-shadow .18s ease;
 }
-.item-cardapio:hover { color: var(--ouro-forte); }
-.item-cardapio.breve { color: rgba(242,238,227,.4); }
-.item-cardapio small { font-size: 10px; letter-spacing: .06em; text-transform: none; font-weight: 600; font-style: italic; }
+/* Brilho de plástico por cima de tudo. */
+.ficha-menu .disco::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.28), transparent 46%);
+}
+.ficha-menu .miolo {
+  width: 62%; aspect-ratio: 1; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1.5px dashed rgba(255,255,255,.6);
+  background: radial-gradient(circle at 40% 35%, color-mix(in srgb, var(--cor) 80%, #fff), var(--cor) 70%);
+  color: rgba(255,255,255,.95); font-size: calc(var(--lado) * .3); line-height: 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+.ficha-menu .nome {
+  font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: rgba(242,238,227,.82); text-align: center; line-height: 1.3;
+}
+.ficha-menu .nome small {
+  display: block; font-size: 10px; font-weight: 600; letter-spacing: .04em;
+  text-transform: none; font-style: italic; color: var(--cinza);
+}
+.ficha-menu:hover .disco {
+  transform: translateY(-6px) rotate(-14deg);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.35),
+    0 4px 0 color-mix(in srgb, var(--cor) 55%, #000),
+    0 20px 26px rgba(0,0,0,.55);
+}
+.ficha-menu:hover .nome { color: var(--ouro-forte); }
+.ficha-menu.breve .disco { filter: saturate(.35) brightness(.7); }
+.ficha-menu.breve .nome { color: rgba(242,238,227,.45); }
 
-/* No celular o cardápio vira lista de duas colunas com filete entre as linhas. */
+/* No celular: quatro fichas na primeira linha, três na segunda, centradas. */
 @media (max-width: 560px) {
   .mesa-entrada { border-radius: 22px 22px 50% 50% / 22px 22px 12% 12%; }
   .acao-entrada { width: 100%; }
-  .cardapio { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-  .item-cardapio { padding: 14px 6px; border-bottom: 1px solid rgba(217,180,91,.14); }
-  .item-cardapio::after { display: none; }
-  .item-cardapio:last-child:nth-child(odd) { grid-column: 1 / -1; border-bottom: 0; }
+  .fichas-menu { gap: 18px 6px; }
+  .ficha-menu { width: calc((100% - 18px) / 4); --lado: 60px; }
+  .ficha-menu .nome { font-size: 10px; letter-spacing: .06em; }
 }
 
 /* ------------------------------------------------------------- mesa/jogo */
