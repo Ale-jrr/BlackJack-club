@@ -299,8 +299,7 @@ async function criarSala() {
 // assinatura limpava a mesa que acabou de chegar e a tela ficava vazia até a
 // próxima atualização.
 function abrirSala(visaoInicial) {
-  codigoAtual = visaoInicial.codigo;
-  ligarSala(codigoAtual);
+  ligarSala(visaoInicial.codigo);
   receber(visaoInicial);
   ctx.irPara('sala');
 }
@@ -352,6 +351,9 @@ function pedirSenha(codigo, aviso = null) {
 
 function ligarSala(codigo) {
   desligarSala();
+  // desligarSala zera o código; sem regravar aqui, naSala() mentia "fora da sala" e o
+  // botão Menu saía sem avisar o servidor nem limpar o ?sala= do endereço.
+  codigoAtual = codigo;
   statusAnterior = null;
   rodadaAnterior = 0;
   desassinar = assinar(codigo, (nova) => receber(nova));

@@ -16,6 +16,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `97a1e0b` | **Crupiê de verdade** |
 | 18/09 | `5dbb01b` | **Aposta livre** na sala; scripts de teste imprimem naipe no Windows |
 | 18/09 | `0f5e572` | Número grande no lobby e no feltro sai abreviado ("10 bi") |
+| 18/09 | COMMIT | **Sair da sala sai de verdade**: atualizar a página depois não volta mais para a sala |
 
 ---
 
@@ -37,6 +38,10 @@ Cada um destes só apareceu olhando a tela ou medindo — os testes do motor pas
 - **Aviso de prazo duplicado** com sorteio de atraso — ver [[Decisões]].
 - **Aposta de 10.000.000.000 vazava do ladrilho** do lobby. Números de um milhão para cima
   saem abreviados (`curto` em `salas.js`), com espaço inquebrável entre "10" e "bi".
+- **Sair pelo Menu não saía da sala.** `ligarSala` chamava `desligarSala`, que zera o código
+  da sala, logo depois de `abrirSala` gravá-lo. Com isso `naSala()` dizia "fora", o Menu não
+  perguntava nada, não avisava o servidor e deixava `?sala=` no endereço: atualizar a página
+  levava de volta à mesa. Hoje `ligarSala` grava o código depois de desligar.
 - **Scripts de teste quebravam ao imprimir ♣** no console cp1252 do Windows. Agora forçam
   UTF-8 na saída.
 
