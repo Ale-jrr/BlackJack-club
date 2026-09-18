@@ -107,5 +107,8 @@ segunda cópia, os dois modos vão divergir em silêncio.
 - **Criar sala** (`salas.js` → `pintarCriar` e `pintarPrevia`): os controles novos
   (cadeiras, rodadas) gravam em `input type=hidden` com os mesmos ids de antes, então
   `lerConfigDaTela` não mudou.
+- **Sala no celular** (≤760px): o feltro vira coluna no fluxo normal (dealer, outros, você) e
+  cresce com a mesa. Os outros são quadradinhos de meia largura; a carta em miniatura mostra
+  só o canto de cima em letra grande (`.canto.baixo` e `.centro` escondidos).
 - **Cuidado com nome de classe**: `.entrada` já é o campo de texto. Por isso a mesa do
   menu se chama `.mesa-entrada`.

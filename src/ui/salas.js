@@ -859,8 +859,8 @@ function pintarLugares() {
     placa.innerHTML = `<span class="av">${j.avatar ?? '🂡'}</span><b>${escapar(j.nome)}</b>
       <span class="fichas">${fmt(j.fichas)}</span>`;
 
-    // §87: no celular as cartas dos outros ficam escondidas para caber todo
-    // mundo; tocar no lugar abre a mão e os números da pessoa.
+    // §87: no celular os outros viram quadradinhos com as cartas em miniatura;
+    // tocar no lugar abre a mão e os números da pessoa.
     if (j.id !== meuId()) {
       el.onclick = () => mostrarJogador(j);
       el.style.cursor = 'pointer';

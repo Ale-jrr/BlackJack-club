@@ -1130,10 +1130,17 @@ select.entrada option { background: #10161a; }
    só atrapalha (e o SVG sairia cortado). */
 @media (max-width: 760px) {
   .pintura { display: none; }
-  .feltro { border-radius: 20px 20px 46% 46% / 20px 20px 13% 13%; }
+  /* No celular o feltro cresce com a mesa: dealer, os outros e você, um embaixo do outro
+     no fluxo normal. Com posição fixa, a mesa cheia empurrava a sua mão para fora da
+     borda, e o rótulo do dealer encostava nos botões do topo. */
+  .feltro {
+    border-radius: 20px 20px 46% 46% / 20px 20px 13% 13%;
+    display: flex; flex-direction: column; padding: 50px 8px 30px;
+  }
+  .lugar-dealer { position: static; transform: none; align-self: center; }
 
   .lugares {
-    position: absolute; left: 8px; right: 8px; top: 33%; bottom: 8px;
+    position: static; flex: 1; margin-top: 16px;
     display: flex; flex-wrap: wrap; gap: 7px;
     justify-content: center; align-content: flex-start;
   }
@@ -1144,11 +1151,26 @@ select.entrada option { background: #10161a; }
     background: rgba(7,9,10,.42); border: 1px solid rgba(242,238,227,.12);
     border-radius: 12px; padding: 6px 8px;
   }
-  /* Os outros viram fichas de uma linha só: nome, valor e aposta. */
-  .lugar:not(.eu) { display: flex; flex-direction: row-reverse; align-items: center; gap: 7px; padding: 5px 9px; }
-  .lugar:not(.eu) .cartas-lugar, .lugar:not(.eu) .circulo { display: none; }
-  .lugar:not(.eu) .mao-lugar + .mao-lugar { margin-left: 5px; }
-  .lugar:not(.eu) .maos-lugar { display: flex; gap: 4px; }
+  /* Os outros viram quadradinhos, dois por linha: nome em cima e, embaixo, as cartas em
+     miniatura com o total e a aposta. A carta pequena mostra só o canto (número e naipe)
+     em letra grande — o desenho inteiro ficaria ilegível nesse tamanho. */
+  .lugar:not(.eu) {
+    width: calc(50% - 4px); display: grid; grid-template-columns: auto auto;
+    justify-content: start; justify-items: start; align-items: center; align-content: start;
+    gap: 5px 8px; padding: 6px 8px; --carta-l: 30px;
+  }
+  /* Nome na linha de cima; cartas e aposta lado a lado embaixo. */
+  .lugar:not(.eu) .placa { order: -1; grid-column: 1 / -1; max-width: 100%; }
+  .lugar:not(.eu) .circulo { display: none; }
+  .lugar:not(.eu) .maos-lugar { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .lugar:not(.eu) .mao-lugar { display: flex; align-items: center; gap: 6px; }
+  .lugar:not(.eu) .mao-lugar + .mao-lugar { margin-left: 0; }
+  .lugar:not(.eu) .cartas-lugar .carta:not(:first-child) { margin-left: -6px; }
+  .lugar:not(.eu) .carta .face { box-shadow: 0 2px 5px rgba(0,0,0,.45); }
+  .lugar:not(.eu) .carta .frente { padding: 3px; }
+  .lugar:not(.eu) .carta .canto { font-size: 13px; }
+  .lugar:not(.eu) .carta .canto i { font-size: 12px; }
+  .lugar:not(.eu) .carta .canto.baixo, .lugar:not(.eu) .carta .centro { display: none; }
   .lugar .cartas-lugar { min-height: 0; }
 
   .lugar.eu {
