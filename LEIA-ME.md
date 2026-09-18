@@ -94,6 +94,14 @@ a função, comparando com o relógio dela. Qualquer cliente pode mandar `tique`
 impede uma sala de travar quando alguém some no meio da vez. Tempo esgotado é sempre PARAR,
 nunca PEDIR (§56).
 
+**Cada chamada ao servidor gasta cota.** O plano grátis dá 500 mil chamadas por mês à função.
+Por isso a sala se mantém em dia pelo caminho mais barato possível: o tempo real avisa as
+mudanças sem gastar nada; quando um prazo vence, o primeiro jogador conectado da fila avisa o
+servidor (os outros só avisam se ele sumir, 2 s depois cada um); e uma sonda de segurança de
+20 em 20 s cobre o caso de o socket cair sem aviso — sem canal, ela volta a 4 s. A lista de
+salas abertas atualiza de 12 em 12 s e para quando a aba está em segundo plano. Medido com um
+jogador parado na sala: 2,6 chamadas por minuto (eram 15,5).
+
 **Duas pessoas agindo no mesmo instante** não se atropelam: a gravação só vale se a versão da
 sala ainda for a que foi lida, e quem perder a corrida relê e refaz.
 
