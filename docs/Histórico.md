@@ -15,6 +15,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `52fea2b` | LEIA-ME explica a economia de chamadas |
 | 18/09 | `97a1e0b` | **Crupiê de verdade** |
 | 18/09 | `5dbb01b` | **Aposta livre** na sala; scripts de teste imprimem naipe no Windows |
+| 18/09 | — | Número grande no lobby e no feltro sai abreviado ("10 bi") |
 
 ---
 
@@ -34,6 +35,8 @@ Cada um destes só apareceu olhando a tela ou medindo — os testes do motor pas
   a mesa e a apagava. Hoje `abrirSala` liga antes e desenha depois.
 - **Ficha 🪙 virava quadrado no Windows 10.** Trocada por ficha desenhada em CSS (`.moeda`).
 - **Aviso de prazo duplicado** com sorteio de atraso — ver [[Decisões]].
+- **Aposta de 10.000.000.000 vazava do ladrilho** do lobby. Números de um milhão para cima
+  saem abreviados (`curto` em `salas.js`), com espaço inquebrável entre "10" e "bi".
 - **Scripts de teste quebravam ao imprimir ♣** no console cp1252 do Windows. Agora forçam
   UTF-8 na saída.
 

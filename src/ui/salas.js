@@ -16,6 +16,19 @@ import { som } from './som.js';
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Math.round(n).toLocaleString('pt-BR');
 
+// Número grande em poucas letras, para caber em ladrilho e no feltro: 10.000.000.000 → "10 bi".
+// Até 999.999 fica por extenso; acima, arredonda a uma casa (2.550.000 → "2,6 mi").
+// O espaço é inquebrável: "10" e "bi" nunca caem em linhas diferentes.
+function curto(n) {
+  const escalas = [[1e12, 'tri'], [1e9, 'bi'], [1e6, 'mi']];
+  for (const [base, nome] of escalas) {
+    if (Math.abs(n) >= base) {
+      return `${(n / base).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}\u00a0${nome}`;
+    }
+  }
+  return fmt(n);
+}
+
 const ATALHOS_FICHAS = [1000, 5000, 10000, 50000, 100000, 500000, 1000000];
 
 let ctx = null;
@@ -471,14 +484,14 @@ function pintarLobby() {
   $('lobby-nome').textContent = visao.nome;
 
   $('lobby-regras').innerHTML = [
-    ['Fichas iniciais', fmt(c.fichasIniciais)],
-    ['Aposta', `${fmt(c.apostaMin)} a ${fmt(c.apostaMax)}`],
+    ['Fichas iniciais', curto(c.fichasIniciais)],
+    ['Aposta', `${curto(c.apostaMin)} a ${curto(c.apostaMax)}`],
     ['Rodadas', c.limiteRodadas === null ? 'Ilimitado' : fmt(c.limiteRodadas)],
     ['Jogadores', `${visao.jogadores.filter((j) => !j.espectador).length}/${c.maxJogadores}`],
     ['Tempo por jogada', `${c.tempoTurno}s`],
     ['Tempo para apostar', `${c.tempoAposta}s`],
-    ['Senha', visao.temSenha ? '🔒 sim' : 'sem senha'],
-    ['Crupiê', c.crupieHumano ? 'um jogador' : 'automático'],
+    ['Senha', visao.temSenha ? '🔒 sim' : 'não'],
+    ['Crupiê', c.crupieHumano ? 'jogador' : 'automático'],
     ['Na lista de salas', c.publica ? 'sim' : 'não'],
   ].map(([r, v]) => `<div class="numero"><b>${v}</b><span>${r}</span></div>`).join('');
 
@@ -578,7 +591,7 @@ function pintarMesa() {
     : `Rodada ${visao.rodada}`;
   $('sala-codigo-mesa').textContent = visao.codigo;
   $('texto-limites').textContent =
-    `APOSTA DE ${fmt(visao.config.apostaMin)} A ${fmt(visao.config.apostaMax)}`;
+    `APOSTA DE ${curto(visao.config.apostaMin)} A ${curto(visao.config.apostaMax)}`.toUpperCase();
 
   const caixaDealer = $('sala-cartas-dealer');
   caixaDealer.innerHTML = '';
