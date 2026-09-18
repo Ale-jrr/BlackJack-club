@@ -28,7 +28,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `2affffe` | Aposta da sala deitada (círculo · fichas · botão); feltro não invade mais o painel; nome dos lugares volta ao tamanho |
 | 18/09 | `9afe829` | **Celular vê as cartas dos outros**: quadradinhos com cartas em miniatura; feltro cresce com a mesa |
 | 18/09 | `9a7b580` | **Dealer joga para ganhar** (carreira e sala); função `sala` republicada na versão 5 |
-| 18/09 | COMMIT | Dealer **faz a conta da mesa** antes de pedir (valor esperado); função `sala` versão 6 |
+| 18/09 | `ea200ec` | Dealer **faz a conta da mesa** antes de pedir (valor esperado); função `sala` versão 6 |
 
 ---
 
