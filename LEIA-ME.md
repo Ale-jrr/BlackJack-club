@@ -2,6 +2,10 @@
 
 Blackjack de fichas virtuais, modo carreira. HTML + ES modules, sem build e sem Node.
 
+A documentação completa está em [`docs/`](docs/BlackJack%20Club.md): índice, mapa do código,
+como o modo online funciona, as decisões tomadas, o histórico e as pendências. Ela é espelhada
+num vault do Obsidian, em `C:/Users/Mayk/obsidian - blackjack club`.
+
 ## Como rodar
 
 ```bash
