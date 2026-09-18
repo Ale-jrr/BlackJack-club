@@ -210,16 +210,68 @@ export function resolverAssento(assento, dealer) {
 }
 
 // O dealer desta casa joga para ganhar (decisão do Mayk, contra a regra fixa de
-// cassino): compra com 16 ou menos, como sempre, e continua comprando enquanto
-// alguma mão parada na mesa estiver na frente dele. Para no 21 ou quando estoura.
-// Blackjack do jogador não conta: com carta nenhuma o dealer passa de um blackjack.
+// cassino). Com 16 ou menos ele pede, como sempre. Com 17 ou mais ele olha a mesa
+// e faz a conta: quanto a casa leva se parar agora, contra quanto espera levar se
+// pedir — pesando o total e a aposta de cada mão parada. Só pede se for vantagem.
+//
+// As chances são as do baralho "infinito" (1/13 por valor, 4/13 para o dez): o
+// dealer não espia o shoe, senão saberia a próxima carta. Blackjack, estouro e
+// desistência dos jogadores já estão decididos e não entram na conta.
+const CHANCE_DAS_CARTAS = [
+  [2, 1 / 13], [3, 1 / 13], [4, 1 / 13], [5, 1 / 13], [6, 1 / 13], [7, 1 / 13],
+  [8, 1 / 13], [9, 1 / 13], [10, 4 / 13], [11, 1 / 13],   // 11 é o Ás
+];
+
+// Quanto a casa ganha (positivo) ou perde (negativo) parando com `total`.
+function saldoDaCasaParando(total, maos) {
+  let saldo = 0;
+  for (const { total: t, aposta } of maos) {
+    if (total > 21 || total < t) saldo -= aposta;
+    else if (total > t) saldo += aposta;
+  }
+  return saldo;
+}
+
+// Melhor resultado esperado para a casa a partir de (total, macia), escolhendo
+// parar ou pedir em cada passo. `memoria` evita refazer a mesma conta.
+function melhorParaCasa(total, macia, maos, memoria) {
+  if (total > 21) return saldoDaCasaParando(total, maos);
+  const chave = `${total}${macia ? 'm' : ''}`;
+  if (memoria.has(chave)) return memoria.get(chave);
+  // A conta obedece a mesma regra da mesa: com 16 ou menos, parar não é opção.
+  const parando = total < 17 ? -Infinity : saldoDaCasaParando(total, maos);
+  const pedindo = total >= 21 ? -Infinity : esperadoPedindo(total, macia, maos, memoria);
+  const melhor = Math.max(parando, pedindo);
+  memoria.set(chave, melhor);
+  return melhor;
+}
+
+function esperadoPedindo(total, macia, maos, memoria) {
+  let esperado = 0;
+  for (const [valor, chance] of CHANCE_DAS_CARTAS) {
+    let t = total + valor;
+    let m = macia || valor === 11;
+    if (t > 21 && m) { t -= 10; m = valor === 11 && macia; }
+    esperado += chance * melhorParaCasa(t, m, maos, memoria);
+  }
+  return esperado;
+}
+
 export function dealerDevePedir(cartasDoDealer, assentos) {
-  const total = valorDaMao(cartasDoDealer).total;
+  const { total, macia } = valorDaMao(cartasDoDealer);
   if (total >= 21) return false;
   if (total < 17) return true;
-  return assentos.some((a) => a.maos.some((m) => (
-    m.status === STATUS_MAO.STAND && valorDaMao(m.cartas).total > total
-  )));
+
+  const maos = [];
+  for (const a of assentos) {
+    for (const m of a.maos) {
+      if (m.status === STATUS_MAO.STAND) maos.push({ total: valorDaMao(m.cartas).total, aposta: m.aposta });
+    }
+  }
+  if (maos.length === 0) return false;
+
+  const memoria = new Map();
+  return esperadoPedindo(total, macia, maos, memoria) > saldoDaCasaParando(total, maos);
 }
 
 // O dealer só compra se alguém ainda pode ganhar dele.

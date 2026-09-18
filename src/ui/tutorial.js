@@ -245,12 +245,14 @@ const CAPITULOS = [
         exemplo({ titulo: '17 ou mais, na frente', cartas: '10♠ 8♥', valor: 'para', cor: 'boa',
           nota: 'Contra o seu 17, ele para: já ganhou.' }),
         exemplo({ titulo: '17 ou mais, atrás', cartas: '10♠ 8♥', valor: 'compra', cor: 'ruim',
-          nota: 'Contra o seu 20, ele pede, e pode estourar.' }),
+          nota: 'Sozinho contra o seu 20, ele pede, e pode estourar.' }),
       ));
       caixa.append(paragrafo(
-        `Empatado, ele não arrisca: 18 contra 18 é empate e ele para. Com vários jogadores na
-         mesa, basta <b>um</b> que parou na frente dele para ele pedir, mesmo que isso o faça
-         estourar contra todos. Ele para no 21, e o seu Blackjack ele não alcança.`));
+        `Com 17 ou mais ele <b>olha a mesa e faz a conta</b>: quanto a casa leva se parar, contra
+         quanto espera levar se pedir, pesando o total e a aposta de cada um. Com 18 contra um 17
+         e um 20 de apostas iguais, ele para: ganha de um, perde do outro, e pedir quase sempre
+         estoura. Se a aposta do 20 for bem maior, ele pede. Ele não espia a próxima carta — a
+         conta usa as chances de um baralho comum. No 21 ele para, e o seu Blackjack ele não alcança.`));
       caixa.append(paragrafo(
         `Ele recebe uma carta aberta e uma escondida. Você decide olhando só para a aberta.
          Quando ela é um Ás ou vale 10, o sistema confere a escondida antes de você jogar, para

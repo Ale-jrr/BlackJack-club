@@ -668,13 +668,17 @@ teste('A visão diz quem é o crupiê', () => {
 
 // ------------------------------------------------------- dealer joga para ganhar
 
-teste('Dealer da mesa cheia pede se estiver perdendo para qualquer um que parou', () => {
-  const parada = (texto) => ({ maos: [{ cartas: cartas(texto), status: STATUS_MAO.STAND }] });
-  const estourada = (texto) => ({ maos: [{ cartas: cartas(texto), status: STATUS_MAO.BUST }] });
-  const bj = { maos: [{ cartas: cartas('A♠ K♠'), status: STATUS_MAO.BLACKJACK }] };
+teste('Dealer da mesa cheia faz a conta antes de pedir', () => {
+  const parada = (texto, aposta = 100) => ({ maos: [{ cartas: cartas(texto), status: STATUS_MAO.STAND, aposta }] });
+  const estourada = (texto) => ({ maos: [{ cartas: cartas(texto), status: STATUS_MAO.BUST, aposta: 100 }] });
+  const bj = { maos: [{ cartas: cartas('A♠ K♠'), status: STATUS_MAO.BLACKJACK, aposta: 100 }] };
 
-  verdade(dealerDevePedir(cartas('10♦ 8♣'), [parada('10♠ 7♥'), parada('K♠ Q♥')]),
-    '18 contra 17 e 20: pede por causa do 20');
+  verdade(!dealerDevePedir(cartas('10♦ 8♣'), [parada('10♠ 7♥'), parada('K♠ Q♥')]),
+    '18 contra 17 e 20 de apostas iguais: empata parado, pedir quase sempre estoura; para');
+  verdade(dealerDevePedir(cartas('10♦ 8♣'), [parada('10♠ 7♥', 100), parada('K♠ Q♥', 5000)]),
+    '18 contra 17 (100) e 20 (5000): a aposta grande está na frente; pede');
+  verdade(dealerDevePedir(cartas('10♦ 8♣'), [parada('K♠ Q♥')]),
+    'sozinho contra um 20: parado perde certo, pedir é melhor');
   verdade(!dealerDevePedir(cartas('10♦ 8♣'), [parada('10♠ 7♥'), parada('9♠ 9♥')]),
     '18 contra 17 e 18: não perde para ninguém, para');
   verdade(!dealerDevePedir(cartas('10♦ 8♣'), [estourada('K♠ Q♥ 5♣'), bj]),

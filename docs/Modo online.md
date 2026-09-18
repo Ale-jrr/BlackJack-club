@@ -51,8 +51,8 @@ LOBBY → APOSTAS → TURNO_JOGADORES → TURNO_DEALER → RESULTADO → APOSTAS
 - **TURNO_JOGADORES** — **um por vez**, na ordem em que sentaram (decisão do Mayk, contra a
   §55 do documento original). Cada jogada renova o prazo. Tempo esgotado é sempre PARAR, nunca
   PEDIR (§56).
-- **TURNO_DEALER** — automático (compra até 16 e, de 17 para cima, enquanto estiver perdendo
-  para alguma mão parada — `dealerDevePedir`) ou nas mãos do
+- **TURNO_DEALER** — automático (compra até 16 e, de 17 para cima, só se a conta da mesa mostrar
+  vantagem para a casa — `dealerDevePedir`) ou nas mãos do
   crupiê, se houver.
 - **RESULTADO** — pausa de 6 segundos e abre a próxima rodada, ou encerra no limite.
 

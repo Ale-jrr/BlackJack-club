@@ -33,7 +33,7 @@ servidor próprio. Nenhuma ficha vale dinheiro: não existe depósito, saque nem
 | repositório | https://github.com/Ale-jrr/BlackJack-club (branch `main`) |
 | hospedagem do site | Vercel, plano grátis, publica sozinha a cada `git push` |
 | servidor das salas | Supabase, projeto `blackjack-club`, id `zwltwqvddvacbgpswsac`, região São Paulo |
-| função do servidor | Edge Function `sala` (fonte em `servidor/sala/index.ts`), versão 5 |
+| função do servidor | Edge Function `sala` (fonte em `servidor/sala/index.ts`), versão 6 |
 | documento de projeto | o texto de 91 seções que o Mayk escreveu no começo; cada regra cita a seção (`§20`, `§56`…) |
 
 ---

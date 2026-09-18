@@ -121,7 +121,7 @@ função `sala`), sem precisar da CLI.
 Fases 1 a 4 do projeto, mais as mesas por nível da Fase 5:
 
 - Motor completo: 6 baralhos, hit, stand, double, split até 4 mãos, split de Áses, surrender,
-  seguro 2:1, dealer que joga para ganhar (pede até passar de quem parou), espiada quando a carta aberta é Ás ou 10.
+  seguro 2:1, dealer que joga para ganhar (com 17 ou mais faz a conta da mesa antes de pedir), espiada quando a carta aberta é Ás ou 10.
 - Saldo virtual, aposta com fichas, repetir e dobrar aposta, bônus de recuperação.
 - XP, 100 níveis, missões diárias e semanais, conquistas, bônus diário de 7 dias.
 - Estatísticas, histórico das rodadas, perfil com nome e avatar, som.
