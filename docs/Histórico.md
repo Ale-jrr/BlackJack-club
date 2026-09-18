@@ -22,6 +22,8 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `6cd5e1d` | **Mesa da carreira como mesa de verdade**: trilho, base curva, letreiro em arco, círculo de aposta; lateral vira placa |
 | 18/09 | `a022dba` | **Menu em fichas de cassino**: a linha de texto embaixo da mesa vira uma fileira de fichas |
 | 18/09 | `f592ae0` | Fichas do menu com o desenho da função no miolo, no lugar do naipe |
+| 18/09 | `9aa2097` | **Missões**: bônus em pilhas de fichas, missões com anel de progresso, conquistas em vitrine de medalhas |
+| 18/09 | COMMIT | **Criar sala** como "montar a mesa": prévia ao vivo, cadeiras, rodadas em botões, tempos com − e + |
 
 ---
 
@@ -47,6 +49,9 @@ Cada um destes só apareceu olhando a tela ou medindo — os testes do motor pas
   da sala, logo depois de `abrirSala` gravá-lo. Com isso `naSala()` dizia "fora", o Menu não
   perguntava nada, não avisava o servidor e deixava `?sala=` no endereço: atualizar a página
   levava de volta à mesa. Hoje `ligarSala` grava o código depois de desligar.
+- **Nome de classe repetido quebra desenho novo.** `.entrada` (campo de texto), `.pilha`
+  (fichas da aposta) e `.lugar` (lugar da mesa online) já existiam e desmontaram o menu, o
+  bônus e a prévia da sala. Antes de criar classe nova, procurar o nome no `estilo.css`.
 - **Scripts de teste quebravam ao imprimir ♣** no console cp1252 do Windows. Agora forçam
   UTF-8 na saída.
 

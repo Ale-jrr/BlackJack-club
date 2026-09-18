@@ -96,5 +96,12 @@ segunda cópia, os dois modos vão divergir em silêncio.
   arco (`svg.pintura` no `index.html`, limites em `#faixa-regras`). A aposta fica em
   `.circulo-aposta`, com LIMPAR / REPETIR / DOBRAR posicionados por grade em `#caixa-aposta`.
   A lateral usa `.placa` (uma linha por número) em vez de cartões.
+- **Missões** (`app.js` → `pintarMissoes`): `.pilha-bonus` (pilhas de fichas por dia),
+  `.missao` com `.anel` (progresso em `--p`), `.vitrine` de `.medalha`. O desenho de cada
+  missão e conquista fica em `DESENHO_DA_MISSAO` e `DESENHO_DA_CONQUISTA`; missão nova sem
+  entrada ali mostra uma estrela.
+- **Criar sala** (`salas.js` → `pintarCriar` e `pintarPrevia`): os controles novos
+  (cadeiras, rodadas) gravam em `input type=hidden` com os mesmos ids de antes, então
+  `lerConfigDaTela` não mudou.
 - **Cuidado com nome de classe**: `.entrada` já é o campo de texto. Por isso a mesa do
   menu se chama `.mesa-entrada`.

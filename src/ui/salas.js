@@ -176,6 +176,26 @@ function pintarAmigos() {
 
 // ------------------------------------------------------------ criar sala
 
+// Desenhos das opções da sala: dizem o que a chave faz antes de ler o texto.
+const tracoSala = (corpo) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${corpo}</svg>`;
+const DESENHOS_CRIAR = {
+  publica: tracoSala('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/>'),
+  recompra: tracoSala('<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5"/>'),
+  entrada: tracoSala('<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M4 12h11M11 8l4 4-4 4"/>'),
+  crupie: tracoSala('<circle cx="12" cy="7" r="3.5"/><path d="M5 21c.8-4 3.5-6.5 7-6.5s6.2 2.5 7 6.5"/><path d="M9.5 14.8 12 17l2.5-2.2"/>'),
+  cadeado: tracoSala('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+};
+
+const OPCOES_CRIAR = [
+  { id: 'c-publica', desenho: 'publica', titulo: 'Sala pública', texto: 'Aparece na lista de salas abertas; com senha, só entra quem souber' },
+  { id: 'c-recompra', desenho: 'recompra', titulo: 'Permitir recompra', texto: 'Quem zera pode voltar ao saldo inicial' },
+  { id: 'c-entrada', desenho: 'entrada', titulo: 'Entrada durante a partida', texto: 'Sem isso, quem chega depois assiste' },
+  { id: 'c-crupie', desenho: 'crupie', titulo: 'Crupiê de verdade', texto: 'Um jogador vira o crupiê: não aposta e decide livremente as jogadas do dealer. A banca continua sendo da casa.' },
+];
+
+const RODADAS_CRIAR = [[5, '5'], [10, '10'], [20, '20'], [50, '50'], ['ilimitado', '∞']];
+
 function pintarCriar() {
   const campos = $('campos-criar');
   const c = {
@@ -184,69 +204,154 @@ function pintarCriar() {
     maxJogadores: 6, limiteRodadas: 10, tempoAposta: 20, tempoTurno: 15,
   };
 
+  const passo = (id, valor, lim, rotulo) => `
+    <div class="passo">
+      <button class="menos" data-alvo="${id}" data-d="-5" aria-label="menos">−</button>
+      <label><input id="${id}" type="number" min="${lim.min}" max="${lim.max}" value="${valor}"><span>s</span></label>
+      <button class="mais" data-alvo="${id}" data-d="5" aria-label="mais">+</button>
+      <small>${rotulo}</small>
+    </div>`;
+
   campos.innerHTML = `
-    <label class="linha-campo"><span>Nome da sala</span>
-      <input class="entrada" id="c-nome" maxlength="28" value="${escapar(c.nome)}"></label>
+    <section class="bloco-criar">
+      <h3>A mesa</h3>
+      <label class="linha-campo"><span>Nome da sala</span>
+        <input class="entrada" id="c-nome" maxlength="28" value="${escapar(c.nome)}"></label>
 
-    <label class="linha-campo"><span>Fichas iniciais de cada jogador</span>
-      <input class="entrada" id="c-fichas" type="number" min="100" step="100" value="${c.fichasIniciais}"></label>
-    <div class="atalhos" id="atalhos-fichas">
-      ${ATALHOS_FICHAS.map((v) => `<button class="botao discreto" data-v="${v}">${fmt(v)}</button>`).join('')}
-    </div>
+      <div class="linha-campo"><span>Lugares <b id="rot-jogadores"></b></span>
+        <input type="hidden" id="c-jogadores" value="${c.maxJogadores}">
+        <div class="cadeiras" id="cadeiras">
+          ${Array.from({ length: LIMITES.jogadores.max }, (_, i) => `
+            <button data-n="${i + 1}" ${i + 1 < LIMITES.jogadores.min ? 'disabled' : ''}
+              aria-label="${i + 1} lugares"><i></i></button>`).join('')}
+        </div>
+      </div>
 
-    <div class="dupla">
-      <label class="linha-campo"><span>Aposta mínima</span>
-        <input class="entrada" id="c-min" type="number" min="1" step="50" value="${c.apostaMin}"></label>
-      <label class="linha-campo"><span>Aposta máxima</span>
-        <input class="entrada" id="c-max" type="number" min="1" step="50" value="${c.apostaMax}"></label>
-    </div>
+      <div class="linha-campo"><span>Rodadas</span>
+        <input type="hidden" id="c-rodadas" value="${c.limiteRodadas}">
+        <div class="segmentos" id="segmentos-rodadas">
+          ${RODADAS_CRIAR.map(([v, t]) => `<button data-v="${v}">${t}</button>`).join('')}
+        </div>
+      </div>
+    </section>
 
-    <div class="dupla">
-      <label class="linha-campo"><span>Máximo de jogadores</span>
-        <input class="entrada" id="c-jogadores" type="number" min="${LIMITES.jogadores.min}"
-          max="${LIMITES.jogadores.max}" value="${c.maxJogadores}"></label>
-      <label class="linha-campo"><span>Rodadas</span>
-        <select class="entrada" id="c-rodadas">
-          ${[5, 10, 20, 50].map((n) => `<option value="${n}" ${n === c.limiteRodadas ? 'selected' : ''}>${n} rodadas</option>`).join('')}
-          <option value="ilimitado">Ilimitado</option>
-        </select></label>
-    </div>
+    <section class="bloco-criar">
+      <h3>As fichas</h3>
+      <label class="linha-campo"><span>Cada jogador começa com</span>
+        <input class="entrada" id="c-fichas" type="number" min="100" step="100" value="${c.fichasIniciais}"></label>
+      <div class="atalhos" id="atalhos-fichas">
+        ${ATALHOS_FICHAS.map((v) => `<button class="botao discreto" data-v="${v}">${curto(v)}</button>`).join('')}
+      </div>
+      <div class="linha-campo"><span>Aposta por rodada</span>
+        <div class="faixa-aposta">
+          <span>de</span><input class="entrada" id="c-min" type="number" min="1" step="50" value="${c.apostaMin}">
+          <span>a</span><input class="entrada" id="c-max" type="number" min="1" step="50" value="${c.apostaMax}">
+        </div>
+      </div>
+    </section>
 
-    <div class="dupla">
-      <label class="linha-campo"><span>Segundos para apostar</span>
-        <input class="entrada" id="c-tempo-aposta" type="number" min="${LIMITES.tempoAposta.min}"
-          max="${LIMITES.tempoAposta.max}" value="${c.tempoAposta}"></label>
-      <label class="linha-campo"><span>Segundos por jogada</span>
-        <input class="entrada" id="c-tempo-turno" type="number" min="${LIMITES.tempoTurno.min}"
-          max="${LIMITES.tempoTurno.max}" value="${c.tempoTurno}"></label>
-    </div>
+    <section class="bloco-criar">
+      <h3>O relógio</h3>
+      <div class="passos">
+        ${passo('c-tempo-aposta', c.tempoAposta, LIMITES.tempoAposta, 'para apostar')}
+        ${passo('c-tempo-turno', c.tempoTurno, LIMITES.tempoTurno, 'por jogada')}
+      </div>
+    </section>
 
-    <label class="linha-campo"><span>Senha (opcional)</span>
-      <input class="entrada" id="c-senha" maxlength="20" autocomplete="off"
-        placeholder="Deixe vazio para qualquer um entrar"></label>
-
-    <div class="opcao"><div><b>Sala pública</b><small>Aparece na lista de salas abertas; com senha, só entra quem souber</small></div>
-      <button class="chave" id="c-publica"><i></i></button></div>
-    <div class="opcao"><div><b>Permitir recompra</b><small>Quem zera pode voltar ao saldo inicial</small></div>
-      <button class="chave" id="c-recompra"><i></i></button></div>
-    <div class="opcao"><div><b>Entrada durante a partida</b><small>Sem isso, quem chega depois assiste</small></div>
-      <button class="chave" id="c-entrada"><i></i></button></div>
-    <div class="opcao"><div><b>Crupiê de verdade</b><small>Um jogador vira o crupiê: não aposta e decide
-      livremente as jogadas do dealer. A banca continua sendo da casa.</small></div>
-      <button class="chave" id="c-crupie"><i></i></button></div>
+    <section class="bloco-criar">
+      <h3>A porta</h3>
+      <label class="linha-campo"><span>Senha (opcional)</span>
+        <span class="com-desenho">${DESENHOS_CRIAR.cadeado}
+          <input class="entrada" id="c-senha" maxlength="20" autocomplete="off"
+            placeholder="Vazio: qualquer um entra"></span></label>
+      ${OPCOES_CRIAR.map((o) => `
+        <div class="opcao opcao-criar"><span class="desenho">${DESENHOS_CRIAR[o.desenho]}</span>
+          <div><b>${o.titulo}</b><small>${o.texto}</small></div>
+          <button class="chave" id="${o.id}"><i></i></button></div>`).join('')}
+    </section>
     <div class="dica" id="aviso-criar"></div>`;
 
+  const mudou = () => { conferirCriar(); pintarPrevia(); };
+
   for (const b of $('atalhos-fichas').querySelectorAll('[data-v]')) {
-    b.onclick = () => { $('c-fichas').value = b.dataset.v; som.ficha(); conferirCriar(); };
+    b.onclick = () => { $('c-fichas').value = b.dataset.v; som.ficha(); mudou(); };
   }
-  for (const id of ['c-publica', 'c-recompra', 'c-entrada', 'c-crupie']) {
-    $(id).onclick = () => { $(id).classList.toggle('ligada'); som.botao(); };
+  for (const b of $('cadeiras').querySelectorAll('[data-n]')) {
+    b.onclick = () => { $('c-jogadores').value = b.dataset.n; som.botao(); mudou(); };
   }
-  for (const id of ['c-fichas', 'c-min', 'c-max', 'c-jogadores']) {
-    $(id).oninput = conferirCriar;
+  for (const b of $('segmentos-rodadas').querySelectorAll('[data-v]')) {
+    b.onclick = () => { $('c-rodadas').value = b.dataset.v; som.botao(); mudou(); };
+  }
+  for (const b of campos.querySelectorAll('.passo button')) {
+    b.onclick = () => {
+      const campo = $(b.dataset.alvo);
+      const novo = Number(campo.value) + Number(b.dataset.d);
+      campo.value = Math.min(Number(campo.max), Math.max(Number(campo.min), novo));
+      som.botao(); mudou();
+    };
+  }
+  for (const o of OPCOES_CRIAR) {
+    $(o.id).onclick = () => { $(o.id).classList.toggle('ligada'); som.botao(); mudou(); };
+  }
+  for (const id of ['c-nome', 'c-fichas', 'c-min', 'c-max', 'c-senha', 'c-tempo-aposta', 'c-tempo-turno']) {
+    $(id).oninput = mudou;
   }
   $('btn-confirmar-criar').onclick = criarSala;
-  conferirCriar();
+  mudou();
+}
+
+// A mesa em miniatura, com as regras escritas no feltro como numa mesa de verdade.
+function pintarPrevia() {
+  const { nome, senha, config: c } = lerConfigDaTela();
+  const n = c.maxJogadores;
+
+  // Estado dos controles que não são campo de texto.
+  $('rot-jogadores').textContent = `· ${n} ${n === 1 ? 'jogador' : 'jogadores'}`;
+  for (const b of $('cadeiras').children) b.classList.toggle('ocupada', Number(b.dataset.n) <= n);
+  for (const b of $('segmentos-rodadas').children) {
+    b.classList.toggle('escolhido', b.dataset.v === String(c.limiteRodadas ?? 'ilimitado'));
+  }
+
+  // Lugares no arco de baixo da mesa, espaçados por igual.
+  const lugares = Array.from({ length: n }, (_, i) => {
+    const t = (n === 1 ? 90 : 158 - (136 * i) / (n - 1)) * (Math.PI / 180);
+    const x = 200 + 150 * Math.cos(t);
+    const y = 104 + 112 * Math.sin(t);
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="11" class="cadeira-previa"/>`;
+  }).join('');
+  const titulo = (nome.trim() || 'Sua mesa').toUpperCase();
+  const tamanho = titulo.length > 20 ? 15 : titulo.length > 14 ? 18 : 22;
+  const crupie = c.crupieHumano;
+
+  $('previa-mesa').innerHTML = `
+    <svg viewBox="0 0 400 250" aria-hidden="true">
+      <defs>
+        <path id="previa-arco-1" d="M 60 128 Q 200 72 340 128"/>
+        <path id="previa-arco-2" d="M 92 156 Q 200 112 308 156"/>
+      </defs>
+      <path class="trilho" d="M 10 12 H 390 V 104 A 190 136 0 0 1 10 104 Z"/>
+      <path class="pano" d="M 20 22 H 380 V 104 A 180 126 0 0 1 20 104 Z"/>
+      <rect class="${crupie ? 'crupie' : 'dealer'}" x="170" y="34" width="60" height="22" rx="4"/>
+      <text class="rot-dealer" x="200" y="49" text-anchor="middle">${crupie ? 'CRUPIÊ' : 'DEALER'}</text>
+      <text class="letreiro-previa" style="font-size:${tamanho}px">
+        <textPath href="#previa-arco-1" startOffset="50%" text-anchor="middle">${escapar(titulo)}</textPath></text>
+      <text class="limites-previa">
+        <textPath href="#previa-arco-2" startOffset="50%" text-anchor="middle">APOSTA DE ${escapar(curto(c.apostaMin || 0))} A ${escapar(curto(c.apostaMax || 0))}</textPath></text>
+      ${lugares}
+      ${senha ? `<g class="tranca" transform="translate(352 30)">${DESENHOS_CRIAR.cadeado.replace('<svg', '<svg width="22" height="22"')}</g>` : ''}
+    </svg>
+    <div class="legenda-previa">
+      <span><b>${curto(c.fichasIniciais || 0)}</b> fichas para cada um</span>
+      <span><b>${c.limiteRodadas ?? '∞'}</b> ${c.limiteRodadas === 1 ? 'rodada' : 'rodadas'}</span>
+      <span><b>${c.tempoAposta || 0}s</b> para apostar · <b>${c.tempoTurno || 0}s</b> por jogada</span>
+    </div>
+    <div class="selos-previa">
+      ${senha ? '<span>com senha</span>' : ''}
+      ${c.publica ? '<span>na lista de salas</span>' : '<span class="apagado">só com o código</span>'}
+      ${c.permitirRecompra ? '<span>recompra</span>' : ''}
+      ${c.permitirEntradaDurante ? '<span>entra no meio</span>' : ''}
+      ${crupie ? '<span>crupiê de verdade</span>' : ''}
+    </div>`;
 }
 
 function lerConfigDaTela() {
