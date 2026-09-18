@@ -51,7 +51,7 @@ export function abrirMesa(novaMesa) {
   sessao = { rodadas: 0, lucro: 0, melhor: 0 };
   vista = { dealer: 0, maos: [], revelado: false };
   $('titulo-mesa').textContent = `Mesa ${mesa.nome}`;
-  $('faixa-regras').textContent = `APOSTA ${fmt(mesa.min)} A ${fmt(mesa.max)} · BLACKJACK PAGA 3:2`;
+  $('faixa-regras').textContent = `APOSTA DE ${fmt(mesa.min)} A ${fmt(mesa.max)}`;
   montarFichas();
   desenhar();
 }
@@ -242,12 +242,14 @@ function pintarControles() {
 
 function pintarLateral() {
   const e = ctx.perfil.estatisticas;
+  // Uma placa com uma linha por número, não quatro cartões: sobra altura para o histórico.
+  const sinal = sessao.lucro > 0 ? 'mais' : sessao.lucro < 0 ? 'menos' : '';
   $('resumo-sessao').innerHTML = [
-    ['Rodadas', fmt(sessao.rodadas)],
-    ['Nesta sessão', `${sessao.lucro >= 0 ? '+' : ''}${fmt(sessao.lucro)}`],
-    ['Sequência', fmt(e.sequencia)],
-    ['Cartas no shoe', fmt(restantes(jogo.shoe))],
-  ].map(([r, v]) => `<div class="numero"><b>${v}</b><span>${r}</span></div>`).join('');
+    ['Rodadas', fmt(sessao.rodadas), ''],
+    ['Nesta sessão', `${sessao.lucro > 0 ? '+' : ''}${fmt(sessao.lucro)}`, sinal],
+    ['Sequência', fmt(e.sequencia), ''],
+    ['Cartas no shoe', fmt(restantes(jogo.shoe)), ''],
+  ].map(([r, v, c]) => `<div><span>${r}</span><b class="${c}">${v}</b></div>`).join('');
 
   $('historico-lateral').innerHTML = ctx.perfil.historico.length
     ? ctx.perfil.historico.slice(0, 25).map(linhaHistorico).join('')

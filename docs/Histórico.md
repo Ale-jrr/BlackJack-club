@@ -19,6 +19,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `b00e2ea` | **Sair da sala sai de verdade**: atualizar a página depois não volta mais para a sala |
 | 18/09 | `74c0198` | **Visual novo**: fontes Cinzel e Manrope, ícones desenhados no menu, bônus em faixa |
 | 18/09 | `21fe03a` | **Menu refeito como mesa**: feltro com as duas ações, o resto vira linha de texto |
+| 18/09 | COMMIT | **Mesa da carreira como mesa de verdade**: trilho, base curva, letreiro em arco, círculo de aposta; lateral vira placa |
 
 ---
 

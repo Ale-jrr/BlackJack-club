@@ -54,7 +54,19 @@
   <!-- ------------------------------------------------------------ jogo -->
   <section class="tela" id="tela-jogo">
     <div class="mesa" id="mesa">
-      <div class="faixa-mesa"><b>BLACKJACK CLUB</b><span id="faixa-regras">BLACKJACK PAGA 3:2 · DEALER PARA NO 17</span></div>
+      <!-- O mesmo letreiro em arco da mesa online, entre o dealer e o jogador. -->
+      <svg class="pintura" viewBox="0 0 1000 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <path id="arco-alto-carreira" d="M 175 300 Q 500 214 825 300"></path>
+          <path id="arco-baixo-carreira" d="M 250 344 Q 500 280 750 344"></path>
+        </defs>
+        <text class="texto-mesa grande">
+          <textPath href="#arco-alto-carreira" startOffset="50%" text-anchor="middle">BLACKJACK PAGA 3 PARA 2</textPath>
+        </text>
+        <text class="texto-mesa media">
+          <textPath href="#arco-baixo-carreira" startOffset="50%" text-anchor="middle" id="faixa-regras">APOSTA DE 50 A 500</textPath>
+        </text>
+      </svg>
 
       <div class="lado" id="lado-dealer">
         <div class="rotulo">Dealer <span id="valor-dealer"></span></div>
@@ -67,8 +79,8 @@
         <div class="maos" id="maos-jogador"></div>
         <div class="controles" id="controles">
           <div class="caixa-aposta" id="caixa-aposta">
-            <span class="rot">APOSTA</span>
-            <span class="vlr" id="valor-aposta">0</span>
+            <!-- O círculo de aposta pintado no feltro, na frente do jogador. -->
+            <div class="circulo-aposta"><span class="rot">APOSTA</span><span class="vlr" id="valor-aposta">0</span></div>
             <button class="botao discreto" id="btn-limpar">LIMPAR</button>
             <button class="botao discreto" id="btn-repetir">REPETIR</button>
             <button class="botao discreto" id="btn-dobrar-aposta">DOBRAR</button>
@@ -83,7 +95,7 @@
     <aside class="lateral">
       <div class="cartao" style="grid-template-rows:auto auto">
         <h2 id="titulo-mesa">Mesa</h2>
-        <div class="numeros" id="resumo-sessao"></div>
+        <div class="placa" id="resumo-sessao"></div>
       </div>
       <div class="cartao">
         <h2>Últimas rodadas</h2>

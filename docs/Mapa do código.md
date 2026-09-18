@@ -91,5 +91,9 @@ segunda cópia, os dois modos vão divergir em silêncio.
 - **Menu**: `.mesa-entrada` (feltro com trilho e curva, em `estilo.css`) recebe as duas
   ações de `ACOES_ENTRADA`; `.cardapio` recebe `ITENS_MENU` como texto. Evitar voltar à
   grade de cartões com ícone: o Mayk achou com "muita cara de IA".
+- **Mesa da carreira**: `.mesa` tem o mesmo trilho e base curva do menu, e o letreiro em
+  arco (`svg.pintura` no `index.html`, limites em `#faixa-regras`). A aposta fica em
+  `.circulo-aposta`, com LIMPAR / REPETIR / DOBRAR posicionados por grade em `#caixa-aposta`.
+  A lateral usa `.placa` (uma linha por número) em vez de cartões.
 - **Cuidado com nome de classe**: `.entrada` já é o campo de texto. Por isso a mesa do
   menu se chama `.mesa-entrada`.
