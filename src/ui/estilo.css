@@ -1063,9 +1063,10 @@ select.entrada option { background: #10161a; }
   position: absolute; transform: translate(-50%, -50%);
   display: grid; justify-items: center; gap: 4px;
   width: max-content;
-  --carta-l: calc(clamp(34px, min(6.4vw, 7vh), 58px) * var(--escala-lugar, 1));
+  --carta-l: calc(clamp(34px, min(6.4vw, 7vh), 58px) * var(--escala-lugar, 1) * var(--encolhe, 1));
 }
-.lugar.eu { --carta-l: calc(clamp(58px, min(11vw, 12vh), 92px) * var(--escala-lugar, 1)); z-index: 4; }
+/* --encolhe: só o lugar de quem dividiu ou pediu muitas cartas diminui (pintarLugares). */
+.lugar.eu { --carta-l: calc(clamp(58px, min(11vw, 12vh), 92px) * var(--escala-lugar, 1) * var(--encolhe, 1)); z-index: 4; }
 
 .lugar .cartas-lugar { display: flex; min-height: calc(var(--carta-l) * 1.4); align-items: flex-end; }
 .lugar .cartas-lugar .carta:not(:first-child) { margin-left: calc(var(--carta-l) * -0.42); }
@@ -1176,7 +1177,7 @@ select.entrada option { background: #10161a; }
   .lugar.eu {
     order: 99; width: 100%; margin-top: auto;
     background: none; border: 0; padding: 0;
-    --carta-l: clamp(58px, 17vw, 88px);
+    --carta-l: calc(clamp(58px, 17vw, 88px) * var(--encolhe, 1));
   }
   .lugar.na-vez::after { inset: -3px; border-radius: 14px; }
   /* No celular sobra largura: o nome inteiro cabe, não precisa cortar. */

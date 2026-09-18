@@ -807,6 +807,7 @@ function pintarLugares() {
     if (!j.conectado) el.classList.add('fora');
     el.style.left = `${x}%`;
     el.style.top = `${y}%`;
+    el.style.setProperty('--encolhe', encolhimento(j));
 
     const maos = document.createElement('div');
     maos.className = 'maos-lugar';
@@ -875,6 +876,19 @@ function pintarLugares() {
     el.append(placa);
     caixa.append(el);
   });
+}
+
+// Quem dividiu ou pediu muitas cartas ocupa mais largura e cobria os vizinhos. Só
+// esse lugar diminui, na medida do que ele tem na mesa; os outros ficam como estão.
+function encolhimento(jogador) {
+  const maos = jogador.maos.length;
+  const cartas = jogador.maos.reduce((t, m) => t + m.cartas.length, 0);
+  if (maos >= 3) return 0.55;
+  if (maos === 2) return cartas >= 6 ? 0.6 : 0.7;
+  if (cartas >= 6) return 0.65;
+  if (cartas === 5) return 0.75;
+  if (cartas === 4) return 0.88;
+  return 1;
 }
 
 // A aposta da rodada é montada, não escolhida numa lista: o jogador digita o

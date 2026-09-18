@@ -110,5 +110,7 @@ segunda cópia, os dois modos vão divergir em silêncio.
 - **Sala no celular** (≤760px): o feltro vira coluna no fluxo normal (dealer, outros, você) e
   cresce com a mesa. Os outros são quadradinhos de meia largura; a carta em miniatura mostra
   só o canto de cima em letra grande (`.canto.baixo` e `.centro` escondidos).
+- **Lugar que encolhe na sala**: `encolhimento(jogador)` em `salas.js` põe `--encolhe` no
+  lugar de quem tem 2+ mãos ou 4+ cartas (0,88 a 0,55); o CSS multiplica `--carta-l` por ele.
 - **Cuidado com nome de classe**: `.entrada` já é o campo de texto. Por isso a mesa do
   menu se chama `.mesa-entrada`.
