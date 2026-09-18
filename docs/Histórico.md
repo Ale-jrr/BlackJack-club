@@ -17,7 +17,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `5dbb01b` | **Aposta livre** na sala; scripts de teste imprimem naipe no Windows |
 | 18/09 | `0f5e572` | Número grande no lobby e no feltro sai abreviado ("10 bi") |
 | 18/09 | `b00e2ea` | **Sair da sala sai de verdade**: atualizar a página depois não volta mais para a sala |
-| 18/09 | COMMIT | **Visual novo**: fontes Cinzel e Manrope, ícones desenhados no menu, bônus em faixa |
+| 18/09 | `74c0198` | **Visual novo**: fontes Cinzel e Manrope, ícones desenhados no menu, bônus em faixa |
 
 ---
 
