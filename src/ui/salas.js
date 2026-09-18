@@ -34,13 +34,13 @@ export function prepararSalas(contexto) {
 
 // --------------------------------------------------------------- utilidades
 
-async function acao(nome, dados = {}, { silencioso = false } = {}) {
+async function acao(nome, dados = {}, { silencioso = false, manterMesa = false } = {}) {
   if (ocupado) return null;
   ocupado = true;
   pintar();
   try {
     const resposta = await chamar(nome, dados, ctx.perfil);
-    if (resposta?.visao) receber(resposta.visao);
+    if (resposta?.visao && !manterMesa) receber(resposta.visao);
     return resposta;
   } catch (erro) {
     if (!silencioso) ctx.torrada(erro.message ?? 'Não consegui falar com o servidor.');
@@ -73,24 +73,64 @@ function segundosRestantes() {
 export function abrirAmigos() {
   ctx.irPara('amigos');
   pintarAmigos();
-  carregarPublicas();
+  atualizarListasDeSalas();
 }
 
-async function carregarPublicas() {
+// ---------------------------------------------------- salas abertas, ao vivo
+
+// A mesma lista aparece na tela inicial e em "Jogar com amigos". Ela se atualiza
+// sozinha enquanto estiver na tela; escondida, não gasta requisição nenhuma.
+const LISTAS_DE_SALAS = ['salas-abertas-menu', 'salas-publicas'];
+const INTERVALO_DA_LISTA = 8000;
+let relogioDaLista = null;
+
+export function ligarListasDeSalas() {
+  clearInterval(relogioDaLista);
+  relogioDaLista = setInterval(atualizarListasDeSalas, INTERVALO_DA_LISTA);
+  atualizarListasDeSalas();
+}
+
+export async function atualizarListasDeSalas() {
+  const visiveis = LISTAS_DE_SALAS.map($).filter((el) => el && el.offsetParent !== null);
+  if (visiveis.length === 0) return;
   try {
     const { salas } = await chamar('publicas');
-    const caixa = $('salas-publicas');
-    if (!caixa) return;
-    caixa.innerHTML = salas?.length
-      ? salas.map((s) => `<button class="mesa-item" data-codigo="${s.codigo}">
-          <span><b>${escapar(s.nome)}</b><small>Código ${s.codigo}</small></span>
-          <span class="req">${s.jogadores}/${s.max_jogadores} →</span>
-        </button>`).join('')
-      : '<div class="vazio">Nenhuma sala pública aberta agora.</div>';
-    for (const b of caixa.querySelectorAll('[data-codigo]')) {
-      b.onclick = () => entrarNaSala(b.dataset.codigo);
+    for (const caixa of visiveis) pintarListaDeSalas(caixa, salas ?? []);
+  } catch {
+    for (const caixa of visiveis) {
+      if (!caixa.dataset.carregou) {
+        caixa.innerHTML = '<div class="vazio">Não consegui buscar as salas agora. Tento de novo em instantes.</div>';
+      }
     }
-  } catch { /* lista pública é enfeite: sem ela dá para entrar pelo código */ }
+  }
+}
+
+function pintarListaDeSalas(caixa, salas) {
+  caixa.dataset.carregou = '1';
+  if (salas.length === 0) {
+    caixa.innerHTML = `<div class="vazio">Nenhuma sala aberta agora.
+      Crie a sua em <b>Jogar com amigos</b> e marque "Sala pública".</div>`;
+    return;
+  }
+
+  caixa.innerHTML = salas.map((s) => {
+    const esperando = s.status === STATUS_SALA.LOBBY;
+    const cheia = esperando && s.jogadores >= s.max_jogadores;
+    const situacao = esperando
+      ? (cheia ? 'cheia' : 'esperando jogadores')
+      : `em partida · rodada ${s.rodada} · entra para assistir`;
+    return `<button class="sala-aberta${cheia ? ' cheia' : ''}" data-codigo="${s.codigo}"
+        data-senha="${s.tem_senha ? '1' : '0'}" ${cheia ? 'disabled' : ''}>
+      <span class="cadeado">${s.tem_senha ? '🔒' : '🔓'}</span>
+      <span class="info"><b>${escapar(s.nome)}</b><small>${situacao} · código ${s.codigo}</small></span>
+      <span class="vagas">${s.jogadores}/${s.max_jogadores}</span>
+      <span class="selo-senha ${s.tem_senha ? 'com' : 'sem'}">${s.tem_senha ? 'COM SENHA' : 'SEM SENHA'}</span>
+    </button>`;
+  }).join('');
+
+  for (const b of caixa.querySelectorAll('[data-codigo]')) {
+    b.onclick = () => entrarNaSala(b.dataset.codigo, { temSenha: b.dataset.senha === '1' });
+  }
 }
 
 function pintarAmigos() {
@@ -153,7 +193,11 @@ function pintarCriar() {
           max="${LIMITES.tempoTurno.max}" value="${c.tempoTurno}"></label>
     </div>
 
-    <div class="opcao"><div><b>Sala pública</b><small>Aparece na lista para qualquer um entrar</small></div>
+    <label class="linha-campo"><span>Senha (opcional)</span>
+      <input class="entrada" id="c-senha" maxlength="20" autocomplete="off"
+        placeholder="Deixe vazio para qualquer um entrar"></label>
+
+    <div class="opcao"><div><b>Sala pública</b><small>Aparece na lista de salas abertas; com senha, só entra quem souber</small></div>
       <button class="chave" id="c-publica"><i></i></button></div>
     <div class="opcao"><div><b>Permitir recompra</b><small>Quem zera pode voltar ao saldo inicial</small></div>
       <button class="chave" id="c-recompra"><i></i></button></div>
@@ -178,6 +222,7 @@ function lerConfigDaTela() {
   const rodadas = $('c-rodadas').value;
   return {
     nome: $('c-nome').value,
+    senha: $('c-senha').value.trim(),
     config: {
       fichasIniciais: Number($('c-fichas').value),
       apostaMin: Number($('c-min').value),
@@ -214,23 +259,61 @@ function conferirCriar() {
 async function criarSala() {
   if (!conferirCriar()) return;
   som.botao();
-  const dados = lerConfigDaTela();
-  const resposta = await acao('criar', dados);
-  if (resposta?.visao) {
-    codigoAtual = resposta.visao.codigo;
-    ligarSala(codigoAtual);
-    ctx.irPara('sala');
+  const resposta = await acao('criar', lerConfigDaTela(), { manterMesa: true });
+  if (resposta?.visao) abrirSala(resposta.visao);
+}
+
+// Liga a assinatura ANTES de desenhar a mesa recebida. Na ordem contrária, a
+// assinatura limpava a mesa que acabou de chegar e a tela ficava vazia até a
+// próxima atualização.
+function abrirSala(visaoInicial) {
+  codigoAtual = visaoInicial.codigo;
+  ligarSala(codigoAtual);
+  receber(visaoInicial);
+  ctx.irPara('sala');
+}
+
+async function entrarNaSala(codigo, { temSenha = false } = {}) {
+  som.botao();
+  if (temSenha) return pedirSenha(codigo);
+  return tentarEntrar(codigo);
+}
+
+async function tentarEntrar(codigo, senha) {
+  if (ocupado) return false;
+  ocupado = true;
+  try {
+    const resposta = await chamar('entrar', { codigo, senha }, ctx.perfil);
+    if (!resposta?.visao) return false;
+    ocupado = false;
+    abrirSala(resposta.visao);
+    return true;
+  } catch (erro) {
+    if (erro.motivo === 'senha') {
+      pedirSenha(codigo, senha ? 'Senha incorreta. Tente de novo.' : null);
+    } else {
+      ctx.torrada(erro.message ?? 'Não consegui entrar na sala.');
+    }
+    return false;
+  } finally {
+    ocupado = false;
   }
 }
 
-async function entrarNaSala(codigo) {
-  som.botao();
-  const resposta = await acao('entrar', { codigo });
-  if (resposta?.visao) {
-    codigoAtual = codigo;
-    ligarSala(codigo);
-    ctx.irPara('sala');
-  }
+function pedirSenha(codigo, aviso = null) {
+  ctx.modal(`🔒 Sala ${codigo}`,
+    `<p>${aviso ?? 'Esta sala tem senha. Digite a que o dono da mesa passou.'}</p>
+     <input class="entrada" id="campo-senha" maxlength="20" autocomplete="off"
+       placeholder="Senha da sala" style="width:100%">`,
+    [
+      { texto: 'VOLTAR' },
+      { texto: 'ENTRAR', classe: 'ouro', acao: () => tentarEntrar(codigo, $('campo-senha').value) },
+    ]);
+  const campo = $('campo-senha');
+  campo.onkeydown = (e) => {
+    if (e.key === 'Enter') [...$('modal-rodape').children].at(-1).click();
+  };
+  setTimeout(() => campo.focus(), 60);
 }
 
 // ------------------------------------------------------------ vida da sala
@@ -370,6 +453,8 @@ function pintarLobby() {
     ['Jogadores', `${visao.jogadores.filter((j) => !j.espectador).length}/${c.maxJogadores}`],
     ['Tempo por jogada', `${c.tempoTurno}s`],
     ['Tempo para apostar', `${c.tempoAposta}s`],
+    ['Senha', visao.temSenha ? '🔒 sim' : 'sem senha'],
+    ['Na lista de salas', c.publica ? 'sim' : 'não'],
   ].map(([r, v]) => `<div class="numero"><b>${v}</b><span>${r}</span></div>`).join('');
 
   $('lobby-jogadores').innerHTML = visao.jogadores.map((j) => `
@@ -417,7 +502,8 @@ async function trocarNome(bruto) {
 async function copiarConvite() {
   const url = new URL(location.href);
   url.searchParams.set('sala', visao.codigo);
-  const texto = `Entra na minha mesa de blackjack: ${url.toString()} (código ${visao.codigo})`;
+  const texto = `Entra na minha mesa de blackjack: ${url.toString()} (código ${visao.codigo})`
+    + (visao.temSenha ? ' — a senha eu te passo separado.' : '');
   try {
     if (navigator.share) await navigator.share({ text: texto });
     else {
@@ -772,10 +858,6 @@ function pintarRelogio() {
 export async function entrarPorLink() {
   const codigo = new URL(location.href).searchParams.get('sala');
   if (!codigo) return false;
-  const resposta = await acao('entrar', { codigo: codigo.toUpperCase() });
-  if (!resposta?.visao) return false;
-  codigoAtual = resposta.visao.codigo;
-  ligarSala(codigoAtual);
-  ctx.irPara('sala');
-  return true;
+  // Link de sala com senha cai no mesmo pedido de senha da lista.
+  return tentarEntrar(codigo.toUpperCase());
 }

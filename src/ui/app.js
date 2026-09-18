@@ -9,7 +9,8 @@ import {
 } from '../dados/perfil.js';
 import { abrirMesa, atualizarSaldoDaMesa, emRodada, linhaHistorico, prepararMesa } from './mesa.js';
 import {
-  abrirAmigos, desligarSala, entrarPorLink, naSala, prepararSalas, sairDaSala,
+  abrirAmigos, atualizarListasDeSalas, desligarSala, entrarPorLink, ligarListasDeSalas,
+  naSala, prepararSalas, sairDaSala,
 } from './salas.js';
 import { abrirTutorial, prepararTutorial } from './tutorial.js';
 import { acordarAudio, configurarSom, som } from './som.js';
@@ -68,7 +69,7 @@ function forcarIr(nome) {
   if (nome === 'estatisticas') pintarEstatisticas();
   if (nome === 'perfil') pintarPerfil();
   if (nome === 'config') pintarConfig();
-  if (nome === 'menu') pintarMenu();
+  if (nome === 'menu') { pintarMenu(); atualizarListasDeSalas(); }
   window.scrollTo(0, 0);
 }
 
@@ -400,6 +401,9 @@ document.addEventListener('pointerdown', () => acordarAudio(perfil.som), { once:
 
 atualizarTopo();
 forcarIr('menu');
+
+// A lista de salas abertas se atualiza sozinha enquanto estiver na tela.
+ligarListasDeSalas();
 
 // Link de convite abre direto na sala (§49).
 entrarPorLink().catch(() => { /* código velho ou sala fechada: fica no menu */ });

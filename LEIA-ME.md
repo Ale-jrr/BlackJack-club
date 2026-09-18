@@ -82,6 +82,10 @@ responder. As tabelas estão com RLS ligado e **sem nenhuma policy**, então a c
 site não lê nem escreve nada — quem toca no banco é a função, com a chave de serviço. Existe
 teste provando isso em `testes/servidor.py`.
 
+**Senha de sala nunca é guardada como foi digitada.** A função transforma a senha num hash
+misturado com o código da sala antes de gravar, e o motor só compara um hash com outro. A lista
+de salas mostra só o sim/não (coluna `tem_senha`), nunca a senha.
+
 **Cada jogador guarda um segredo** no próprio navegador (`blackjack-club:identidade:v1`). Toda
 ação vai com ele; sem isso bastaria saber o id de alguém para jogar no lugar da pessoa.
 
@@ -114,9 +118,11 @@ Fases 1 a 4 do projeto, mais as mesas por nível da Fase 5:
   dessa conta e um teste de cinco perguntas no fim.
 - Seis mesas desbloqueando por nível.
 - **Modo jogar com amigos**: criar sala com as regras do ADM, código de convite e link,
-  lobby com pronto e nome editável, até 10 jogadores, aposta com prazo, jogada **um por vez**
+  lobby com pronto e nome editável, senha opcional, até 10 jogadores, aposta com prazo, jogada **um por vez**
   com cronômetro, dealer compartilhado, ranking da sala, campeão, recompra, espectadores,
   reconexão.
+- **Salas abertas na tela inicial**: quem entra no jogo já vê as salas públicas, com cadeado
+  nas que têm senha, vagas e se estão esperando gente ou em partida. A lista se atualiza sozinha.
 - Mesa online desenhada como mesa de verdade: dealer no topo, lugares em arco com fichas e
   placa de cada jogador, e você sempre no meio. No celular o arranjo muda (§87): os outros
   viram fichas de uma linha e a sua mão fica grande embaixo; tocar em alguém abre as cartas

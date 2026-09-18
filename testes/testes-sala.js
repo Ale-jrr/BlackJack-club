@@ -371,6 +371,34 @@ teste('Quem sai no meio da vez não trava a sala', () => {
   igual(sala.vezDe, 'p2', 'a vez andou');
 });
 
+// ------------------------------------------------------------------ senha
+
+teste('Sala com senha barra quem não tem a senha', () => {
+  const sala = criarSala({ codigo: 'SENHA1', nome: 'Fechada', host: HOST, senha: 'hash-da-senha',
+    config: { fichasIniciais: 10000, apostaMin: 500, apostaMax: 5000 }, agora: 1000 });
+  igual(erroDe(() => entrar(sala, { id: 'p2', nome: 'Sem senha' }, 1100)), 'senha', 'sem senha');
+  igual(erroDe(() => entrar(sala, { id: 'p2', nome: 'Errou', senha: 'outra' }, 1100)), 'senha', 'senha errada');
+  entrar(sala, { id: 'p2', nome: 'Acertou', senha: 'hash-da-senha' }, 1200);
+  igual(sala.jogadores.length, 2, 'com a senha certa entra');
+});
+
+teste('Quem já está na sala volta sem digitar a senha de novo', () => {
+  const sala = criarSala({ codigo: 'SENHA2', nome: 'Fechada', host: HOST, senha: 'hash',
+    config: { fichasIniciais: 10000 }, agora: 1000 });
+  entrar(sala, { id: 'p2', nome: 'João', senha: 'hash' }, 1100);
+  entrar(sala, { id: 'p2', nome: 'João' }, 1200);          // reconectou
+  igual(sala.jogadores.length, 2, 'não duplicou');
+});
+
+teste('A visão avisa que tem senha, mas nunca mostra qual é', () => {
+  const sala = criarSala({ codigo: 'SENHA3', nome: 'Fechada', host: HOST, senha: 'hash-secreto',
+    config: { fichasIniciais: 10000 }, agora: 1000 });
+  const visao = visaoPara(sala, 'p1');
+  igual(visao.temSenha, true, 'sabe que tem');
+  verdade(!JSON.stringify(visao).includes('hash-secreto'), 'a senha não vaza');
+  igual(visaoPara(salaCom(2), 'p1').temSenha, false, 'sala sem senha');
+});
+
 // ------------------------------------------------------------------ visão
 
 teste('A visão do jogador não mostra o shoe nem a carta escondida', () => {

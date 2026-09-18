@@ -35,6 +35,19 @@ function recusar(motivo: string, mensagem: string, status = 400) {
   return responder({ erro: { motivo, mensagem } }, status);
 }
 
+// ------------------------------------------------------------------ senha
+
+// A senha da sala nunca é guardada como foi digitada: vira um hash misturado com
+// o código da sala. O motor só compara um hash com outro.
+async function hashDaSenha(codigo: string, senha: unknown) {
+  const limpa = String(senha ?? '').trim().slice(0, 20);
+  if (!limpa) return null;
+  const bytes = new Uint8Array(
+    await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${codigo}:${limpa}`)),
+  );
+  return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 // ------------------------------------------------------------------ banco
 
 async function rest(caminho: string, init: RequestInit = {}) {
@@ -67,6 +80,7 @@ function resumoDaLinha(sala: any) {
     jogadores: sala.jogadores.filter((j: any) => !j.espectador).length,
     max_jogadores: sala.config.maxJogadores,
     rodada: sala.rodada,
+    tem_senha: Boolean(sala.senha),
     estado: sala,
     atualizada_em: new Date().toISOString(),
   };
@@ -157,10 +171,16 @@ Deno.serve(async (req: Request) => {
 
   try {
     if (acao === 'publicas') {
+      // Salas esperando gente e salas em partida (dá para assistir, ou entrar se
+      // o ADM liberou). Partida encerrada não aparece.
       const linhas = await rest(
-        `sala?publica=eq.true&status=eq.${STATUS_SALA.LOBBY}&select=codigo,nome,jogadores,max_jogadores,atualizada_em&order=atualizada_em.desc&limit=20`,
+        `sala?publica=eq.true&status=neq.${STATUS_SALA.PARTIDA_FINALIZADA}`
+        + '&select=codigo,nome,status,jogadores,max_jogadores,tem_senha,rodada,atualizada_em'
+        + '&order=atualizada_em.desc&limit=30',
       );
-      return responder({ salas: linhas ?? [] });
+      const salas = (linhas ?? []).sort((a: any, b: any) =>
+        Number(b.status === STATUS_SALA.LOBBY) - Number(a.status === STATUS_SALA.LOBBY));
+      return responder({ salas });
     }
 
     if (!acao) return recusar('acao', 'Sem ação.');
@@ -170,8 +190,10 @@ Deno.serve(async (req: Request) => {
     if (acao === 'criar') {
       let sala = null;
       for (let tentativa = 0; tentativa < 5 && !sala; tentativa++) {
+        const codigoNovo = gerarCodigo();
         const novo = criarSala({
-          codigo: gerarCodigo(),
+          codigo: codigoNovo,
+          senha: await hashDaSenha(codigoNovo, corpo.senha),
           nome: corpo.nome,
           host: { id: jogador.id, nome: jogador.nome, avatar: jogador.avatar },
           config: corpo.config,
@@ -213,7 +235,10 @@ Deno.serve(async (req: Request) => {
 
       switch (acao) {
         case 'entrar':
-          entrar(sala, { id: jogador.id, nome: jogador.nome, avatar: jogador.avatar, senha: corpo.senha }, agora);
+          entrar(sala, {
+            id: jogador.id, nome: jogador.nome, avatar: jogador.avatar,
+            senha: await hashDaSenha(codigo, corpo.senha),
+          }, agora);
           break;
         case 'estado':
           definirConexao(sala, jogador.id, true);

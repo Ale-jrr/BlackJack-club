@@ -126,8 +126,10 @@ function novoJogador({ id, nome, avatar, fichas, agora, espectador = false }) {
   };
 }
 
+// `senha` chega aqui já transformada pelo servidor (hash): o motor só compara
+// texto com texto e nunca sabe qual é a senha de verdade.
 export function criarSala({
-  codigo, nome, host, config: bruta, agora = Date.now(), shoe = criarShoe(),
+  codigo, nome, host, config: bruta, agora = Date.now(), shoe = criarShoe(), senha = null,
 }) {
   const config = normalizarConfig(bruta);
   const sala = {
@@ -144,6 +146,7 @@ export function criarSala({
     shoe,
     historico: [],
     criadaEm: agora,
+    senha: senha || null,
     versao: 1,
   };
   return sala;
@@ -170,7 +173,9 @@ export function entrar(sala, { id, nome, avatar, senha }, agora = Date.now()) {
     jaEsta.nome = String(nome ?? jaEsta.nome).trim().slice(0, 18) || jaEsta.nome;
     return sala;
   }
-  if (sala.senha && sala.senha !== senha) recusar('senha', 'Senha da sala incorreta.');
+  // Quem já tem assento volta sem senha (acima); quem chega pela primeira vez precisa dela.
+  if (sala.senha && !senha) recusar('senha', 'Esta sala pede senha.');
+  if (sala.senha && sala.senha !== senha) recusar('senha', 'Senha incorreta.');
 
   const naMesa = sala.jogadores.filter((j) => !j.espectador).length;
   const emPartida = sala.status !== STATUS_SALA.LOBBY && sala.status !== STATUS_SALA.PARTIDA_FINALIZADA;
@@ -555,6 +560,7 @@ export function visaoPara(sala, id) {
     nome: sala.nome,
     hostId: sala.hostId,
     souHost: sala.hostId === id,
+    temSenha: Boolean(sala.senha),       // só o fato de ter; a senha em si nunca sai
     config: sala.config,
     status: sala.status,
     rodada: sala.rodada,

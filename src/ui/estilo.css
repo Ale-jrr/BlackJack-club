@@ -861,3 +861,49 @@ select.entrada option { background: #10161a; }
 .pergunta-treino { font-size: 16px; text-align: center; }
 .pergunta-treino b { color: var(--ouro-forte); }
 .placar-treino { text-align: center; font-size: 13px; color: var(--cinza); margin-bottom: 10px; }
+
+/* ---------------------------------------------------------- salas abertas */
+
+.cabeca-salas { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.cabeca-salas h2 { margin-bottom: 12px; }
+.ao-vivo { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--cinza); }
+.ao-vivo i {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--verde);
+  box-shadow: 0 0 0 0 rgba(94,214,143,.6); animation: pulso-vivo 2s infinite;
+}
+@keyframes pulso-vivo {
+  0% { box-shadow: 0 0 0 0 rgba(94,214,143,.6); }
+  70% { box-shadow: 0 0 0 8px rgba(94,214,143,0); }
+  100% { box-shadow: 0 0 0 0 rgba(94,214,143,0); }
+}
+
+.lista-salas { display: grid; gap: 9px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+
+.sala-aberta {
+  display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center;
+  width: 100%; text-align: left; padding: 12px 14px; border-radius: 14px;
+  background: linear-gradient(150deg, rgba(23,32,28,.92), rgba(12,17,15,.92));
+  border: 1px solid rgba(217,180,91,.2);
+  transition: border-color .14s ease, transform .14s ease;
+}
+.sala-aberta:hover:not(:disabled) { border-color: var(--ouro); transform: translateY(-2px); }
+.sala-aberta:disabled { opacity: .5; cursor: default; }
+.sala-aberta .cadeado {
+  width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 19px;
+  background: rgba(255,255,255,.05);
+}
+.sala-aberta .info { min-width: 0; }
+.sala-aberta .info b { display: block; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sala-aberta .info small { display: block; font-size: 12px; color: var(--cinza); margin-top: 2px; }
+.sala-aberta .vagas { font-weight: 800; color: var(--ouro-forte); font-size: 14px; }
+.selo-senha {
+  font-size: 10px; font-weight: 800; letter-spacing: .6px; padding: 3px 8px; border-radius: 999px;
+  white-space: nowrap;
+}
+.selo-senha.com { background: rgba(229,90,90,.15); color: #ff9b9b; border: 1px solid rgba(229,90,90,.45); }
+.selo-senha.sem { background: rgba(94,214,143,.12); color: var(--verde); border: 1px solid rgba(94,214,143,.4); }
+
+@media (max-width: 480px) {
+  .sala-aberta { grid-template-columns: auto 1fr auto; }
+  .sala-aberta .selo-senha { grid-column: 2 / 4; justify-self: start; }
+}

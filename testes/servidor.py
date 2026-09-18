@@ -176,6 +176,34 @@ def main():
         except urllib.error.HTTPError as e:
             checar(e.code in (401, 403, 404), f'A tabela {tabela} barra a chave pública', e.code)
 
+    # ------------------------------------------------ sala aberta com senha
+    r = chamar({**MAYK, 'acao': 'criar', 'nome': 'Mesa trancada', 'senha': 'truco123',
+                'config': {'publica': True, 'fichasIniciais': 10000, 'apostaMin': 500, 'apostaMax': 5000}})
+    trancada = r['visao']['codigo']
+    checar(r['visao']['temSenha'] is True, 'A sala nasce com senha')
+    checar('truco123' not in json.dumps(r), 'A senha não volta na resposta')
+
+    lista = chamar({'acao': 'publicas'}).get('salas', [])
+    linha = next((s for s in lista if s['codigo'] == trancada), None)
+    checar(linha is not None and linha['tem_senha'] is True, 'A lista pública mostra o cadeado', linha)
+    checar(linha is not None and 'senha' not in {k for k in linha if k != 'tem_senha'},
+           'A lista não traz a senha', linha)
+
+    r = chamar({**JOAO, 'acao': 'entrar', 'codigo': trancada})
+    checar(r.get('erro', {}).get('motivo') == 'senha', 'Sem senha não entra', r)
+    r = chamar({**JOAO, 'acao': 'entrar', 'codigo': trancada, 'senha': 'chute'})
+    checar(r.get('erro', {}).get('motivo') == 'senha', 'Senha errada não entra', r)
+    r = chamar({**JOAO, 'acao': 'entrar', 'codigo': trancada, 'senha': 'truco123'})
+    checar('visao' in r, 'Senha certa entra', r.get('erro'))
+    r = chamar({**JOAO, 'acao': 'entrar', 'codigo': trancada})
+    checar('visao' in r, 'Quem já entrou volta sem senha', r.get('erro'))
+
+    # O teste não pode deixar sala de mentira na lista pública do site de verdade.
+    chamar({**JOAO, 'acao': 'sair', 'codigo': trancada})
+    chamar({**MAYK, 'acao': 'sair', 'codigo': trancada})
+    lista = chamar({'acao': 'publicas'}).get('salas', [])
+    checar(all(s['codigo'] != trancada for s in lista), 'A sala do teste some da lista ao esvaziar')
+
     # Sala que não existe.
     r = chamar({**MAYK, 'acao': 'estado', 'codigo': 'ZZZZZZ'})
     checar(r.get('erro', {}).get('motivo') == 'sem-sala', 'Código inexistente dá erro claro', r)
