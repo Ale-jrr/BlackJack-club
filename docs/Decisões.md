@@ -39,6 +39,9 @@ Quando uma decisão aqui contradiz o documento original de 91 seções, **vale a
 | Quem entra com a partida rolando **assiste** (§64), salvo se o ADM liberar | mantém a partida justa |
 | A aposta de cada rodada começa **na anterior**, se couber; senão, na mínima | quem aposta sempre o mesmo não precisa redigitar |
 | Salas em partida **também aparecem** na lista, como "entra para assistir" | lista só de salas esperando fica vazia quase sempre |
+| Fontes: **Cinzel** no logo, títulos, feltro e cantos das cartas; **Manrope** no resto | Cinzel é maiúscula romana de letreiro de cassino; Manrope é legível pequena e tem números retos. Mayk pediu "mais bonito, as fontes e etc" |
+| Ícones do menu **desenhados em traço** (SVG em `app.js` → `ICONES`), não emoji | emoji muda de cara em cada sistema e no Windows 10 parecia improviso |
+| Grade do menu com **5 colunas** (2 abaixo de 1020px, 1 no celular) e bônus em **faixa inteira** | com auto-fit sobrava botão sozinho na última linha |
 | A senha da sala é guardada **em hash** | ninguém, nem com acesso ao banco, lê a senha |
 | Sala parada **12 horas** é apagada | sala de teste e de sábado à noite não ficam para sempre |
 

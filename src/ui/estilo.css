@@ -19,7 +19,10 @@
   --sombra: 0 18px 42px rgba(0, 0, 0, .55);
   --topo: 68px;
   --carta-l: clamp(70px, min(20vw, 15vh), 108px);
-  --fonte: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  /* Manrope no texto; Cinzel, maiúscula romana de letreiro de cassino, no logo e nos títulos.
+     Sem internet, cai nas fontes do sistema e nada quebra. */
+  --fonte: 'Manrope', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --fonte-titulo: 'Cinzel', Georgia, 'Times New Roman', serif;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -36,6 +39,9 @@ html, body {
   color: var(--creme);
   font-family: var(--fonte);
   overscroll-behavior: none;
+  /* Números de largura igual: saldo e cronômetro não tremem quando mudam. */
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
@@ -48,6 +54,7 @@ body {
 button { font-family: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
 button:disabled { cursor: default; }
 h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: .3px; }
+h2 { font-family: var(--fonte-titulo); letter-spacing: .6px; }
 
 /* ------------------------------------------------------------------ topo */
 
@@ -134,19 +141,33 @@ main { height: calc(100% - var(--topo)); overflow: hidden; }
 
 .hero { text-align: center; padding: clamp(10px, 3vh, 34px) 0 6px; }
 .hero .marca {
-  font-size: clamp(30px, 6.4vw, 60px);
-  font-weight: 800; letter-spacing: 2px;
-  background: linear-gradient(180deg, var(--ouro-forte), #9a7526);
+  font-family: var(--fonte-titulo);
+  font-size: clamp(32px, 6.8vw, 68px);
+  font-weight: 800; letter-spacing: .08em; line-height: 1.05;
+  background: linear-gradient(180deg, #fff1c9 0%, var(--ouro-forte) 38%, #b88a32 72%, #8a6420 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 10px 28px rgba(217,180,91,.18));
 }
-.hero .naipes { font-size: clamp(18px, 3vw, 26px); letter-spacing: 10px; margin-top: 4px; }
+/* Naipes entre dois filetes dourados, como o friso de uma mesa. */
+.hero .naipes {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  font-size: clamp(16px, 2.4vw, 22px); letter-spacing: 8px; margin-top: 10px; color: var(--creme);
+}
+.hero .naipes::before, .hero .naipes::after {
+  content: ''; height: 1px; width: clamp(40px, 12vw, 140px);
+  background: linear-gradient(90deg, transparent, rgba(217,180,91,.7));
+}
+.hero .naipes::after { transform: scaleX(-1); }
 .hero .naipes .r { color: var(--vermelho); }
-.hero .sub { color: var(--cinza); margin-top: 8px; font-size: clamp(12px, 1.6vw, 15px); }
+.hero .sub { color: var(--cinza); margin-top: 10px; font-size: clamp(12px, 1.6vw, 15px); letter-spacing: .2px; }
 
+/* Colunas fixas em vez de auto-fit: com 5 (JOGAR ocupa duas) e com 2 as linhas fecham
+   certinho; o auto-fit escolhia 4 ou 3 e deixava botão sozinho no fim. */
 .menu-grade {
   display: grid; gap: clamp(10px, 1.6vw, 16px);
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
+@media (max-width: 1020px) { .menu-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .menu-botao {
   position: relative;
@@ -159,21 +180,48 @@ main { height: calc(100% - var(--topo)); overflow: hidden; }
   transition: transform .14s ease, border-color .14s ease, background .14s ease;
 }
 .menu-botao:hover { transform: translateY(-3px); border-color: var(--ouro); }
-.menu-botao .icone { font-size: 26px; width: 44px; height: 44px; display: grid; place-items: center;
-  border-radius: 12px; background: rgba(217,180,91,.12); flex: none; }
-.menu-botao b { display: block; font-size: clamp(14px, 1.8vw, 17px); }
-.menu-botao span { display: block; font-size: 12px; color: var(--cinza); margin-top: 2px; }
+.menu-botao .icone {
+  width: 46px; height: 46px; display: grid; place-items: center; flex: none;
+  border-radius: 13px; color: var(--ouro-forte);
+  background: radial-gradient(circle at 30% 25%, rgba(240,207,130,.2), rgba(217,180,91,.06));
+  border: 1px solid rgba(217,180,91,.28);
+  transition: color .14s ease, background .14s ease;
+}
+.menu-botao .icone svg { width: 25px; height: 25px; }
+.menu-botao:hover .icone { color: #fff1c9; background: radial-gradient(circle at 30% 25%, rgba(240,207,130,.32), rgba(217,180,91,.1)); }
+.menu-botao b { display: block; font-size: clamp(13.5px, 1.5vw, 15.5px); font-weight: 800; letter-spacing: .06em; }
+.menu-botao span { display: block; font-size: 12.5px; color: var(--cinza); margin-top: 3px; font-weight: 500; line-height: 1.35; }
 .menu-botao.destaque {
   grid-column: span 2;
-  background: linear-gradient(140deg, #14513e, #0b2b22);
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(94,214,143,.16), transparent 55%),
+    linear-gradient(140deg, #14513e, #0b2b22);
   border-color: var(--ouro);
+}
+.menu-botao.destaque b { font-family: var(--fonte-titulo); font-size: clamp(18px, 2.2vw, 24px); letter-spacing: .1em; }
+.menu-botao.destaque .icone { width: 54px; height: 54px; }
+.menu-botao.destaque .icone svg { width: 30px; height: 30px; }
+
+/* Bônus do dia: faixa dourada de largura inteira, no fim da grade. */
+.menu-botao.bonus {
+  grid-column: 1 / -1;
+  background: linear-gradient(100deg, rgba(217,180,91,.2), rgba(217,180,91,.05) 60%, rgba(23,32,28,.95));
+  border-color: var(--ouro);
+}
+.menu-botao.bonus > span:nth-child(2) { flex: 1; }
+.menu-botao.bonus .pegar {
+  font-size: 12.5px; font-weight: 800; letter-spacing: .1em; color: var(--preto); margin: 0;
+  background: linear-gradient(180deg, var(--ouro-forte), var(--ouro)); padding: 9px 18px; border-radius: 999px;
 }
 .menu-botao .selo {
   position: absolute; top: 10px; right: 12px;
   font-size: 10.5px; font-weight: 800; color: var(--preto);
   background: var(--verde); padding: 2px 8px; border-radius: 999px;
 }
-@media (max-width: 640px) { .menu-botao.destaque { grid-column: span 1; } }
+@media (max-width: 480px) {
+  .menu-grade { grid-template-columns: 1fr; }
+  .menu-botao.destaque { grid-column: span 1; }
+}
 
 /* ------------------------------------------------------------- mesa/jogo */
 
@@ -212,7 +260,7 @@ main { height: calc(100% - var(--topo)); overflow: hidden; }
   position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
   text-align: center; pointer-events: none; opacity: .18;
 }
-.faixa-mesa b { font-size: clamp(15px, 2.6vw, 26px); letter-spacing: 4px; color: var(--ouro-forte); }
+.faixa-mesa b { font-family: var(--fonte-titulo); font-size: clamp(17px, 2.9vw, 30px); letter-spacing: 5px; color: var(--ouro-forte); }
 .faixa-mesa span { display: block; font-size: clamp(10px, 1.4vw, 13px); letter-spacing: 3px; color: var(--creme); }
 
 /* O miolo da mesa: em tela larga ele fica limpo, porque a lateral já mostra os
@@ -318,7 +366,7 @@ main { height: calc(100% - var(--topo)); overflow: hidden; }
 .carta.virada .verso { transform: rotateY(0deg); }
 
 .carta .canto {
-  font-weight: 800; line-height: 1;
+  font-family: var(--fonte-titulo); font-weight: 700; line-height: 1;
   font-size: calc(var(--carta-l) * .22);
   display: flex; flex-direction: column; align-items: center;
 }
@@ -602,7 +650,7 @@ select.entrada option { background: #10161a; }
 .pintura { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .pintura .risco { fill: none; stroke: rgba(255,255,255,.42); stroke-width: 3; }
 .pintura .risco.fina { stroke: rgba(255,255,255,.2); stroke-width: 2; }
-.texto-mesa { font-family: var(--fonte); font-weight: 800; }
+.texto-mesa { font-family: var(--fonte-titulo); font-weight: 700; }
 .texto-mesa.grande { font-size: 34px; fill: #f2c14e; letter-spacing: 1px;
   paint-order: stroke; stroke: rgba(0,0,0,.4); stroke-width: 3px; }
 .texto-mesa.media { font-size: 19px; fill: rgba(255,255,255,.66); letter-spacing: .5px; }

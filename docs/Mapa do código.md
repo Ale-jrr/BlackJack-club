@@ -80,3 +80,12 @@ segunda cópia, os dois modos vão divergir em silêncio.
 | telas do modo online | `src/ui/salas.js` e `index.html` |
 | XP, missões, conquistas | `src/dados/progressao.js` |
 | cores, tamanhos, layout de celular | `src/ui/estilo.css` |
+
+---
+
+## Visual
+
+- **Fontes** carregam do Google Fonts no `index.html`. No CSS: `--fonte` (Manrope) e
+  `--fonte-titulo` (Cinzel). Sem internet, caem nas fontes do sistema.
+- **Números** usam `tabular-nums` no `body`: saldo e cronômetro não tremem.
+- **Ícones do menu**: `ICONES` em `app.js`, SVG de traço com `currentColor`.
