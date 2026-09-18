@@ -930,21 +930,24 @@ function montarPainelDeAposta(caixa, eu) {
 
   caixa.innerHTML = `
     <div class="montar-aposta">
-      <label class="valor-da-aposta">
-        <span class="moeda"></span>
-        <input id="valor-aposta-sala" class="entrada" inputmode="numeric" autocomplete="off"
-          aria-label="Valor da aposta">
+      <!-- Deitado, como na carreira: o círculo de aposta com o valor, as fichas com os
+           atalhos em texto, e o botão. Em pé ele ficava tão alto que empurrava o feltro. -->
+      <label class="circulo-sala">
+        <span class="rot">APOSTA</span>
+        <input id="valor-aposta-sala" inputmode="numeric" autocomplete="off" aria-label="Valor da aposta">
       </label>
-      <div class="fichas fichas-da-sala">
-        ${fichas.map((v) => `<button class="ficha f${v}" data-soma="${v}">${v >= 1000 ? `${v / 1000}K` : v}</button>`).join('')}
+      <div class="meio-aposta">
+        <div class="fichas fichas-da-sala">
+          ${fichas.map((v) => `<button class="ficha f${v}" data-soma="${v}">${v >= 1000 ? `${v / 1000}K` : v}</button>`).join('')}
+        </div>
+        <div class="atalhos-aposta">
+          <button data-atalho="limpar">LIMPAR</button>
+          <button data-atalho="minimo">MÍNIMO</button>
+          <button data-atalho="dobro">DOBRAR</button>
+          <button data-atalho="maximo">MÁXIMO</button>
+        </div>
       </div>
-      <div class="linha-botoes atalhos-aposta">
-        <button class="botao discreto" data-atalho="limpar">LIMPAR</button>
-        <button class="botao discreto" data-atalho="minimo">MÍNIMO</button>
-        <button class="botao discreto" data-atalho="dobro">DOBRAR</button>
-        <button class="botao discreto" data-atalho="maximo">MÁXIMO</button>
-      </div>
-      <button class="botao ouro largo" id="btn-confirmar-aposta">APOSTAR</button>
+      <button class="botao ouro" id="btn-confirmar-aposta">APOSTAR</button>
     </div>`;
 
   const campo = $('valor-aposta-sala');

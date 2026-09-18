@@ -25,6 +25,7 @@ O que foi feito, em ordem. Índice em [[BlackJack Club]]. Cada linha é um commi
 | 18/09 | `9aa2097` | **Missões**: bônus em pilhas de fichas, missões com anel de progresso, conquistas em vitrine de medalhas |
 | 18/09 | `2df5fe5` | **Criar sala** como "montar a mesa": prévia ao vivo, cadeiras, rodadas em botões, tempos com − e + |
 | 18/09 | `df3c5a0` | Mesa da carreira com bandeja, sapato e descarte; fichas de aposta com insertos; histórico com ficha de resultado |
+| 18/09 | COMMIT | Aposta da sala deitada (círculo · fichas · botão); feltro não invade mais o painel; nome dos lugares volta ao tamanho |
 
 ---
 
@@ -53,6 +54,11 @@ Cada um destes só apareceu olhando a tela ou medindo — os testes do motor pas
 - **Nome de classe repetido quebra desenho novo.** `.entrada` (campo de texto), `.pilha`
   (fichas da aposta) e `.lugar` (lugar da mesa online) já existiam e desmontaram o menu, o
   bônus e a prévia da sala. Antes de criar classe nova, procurar o nome no `estilo.css`.
+- **Feltro por cima do painel de aposta** na sala, em tela de 720px. O painel em pé passava de
+  350px e a linha do feltro era `minmax(0, 1fr)`, então o feltro (com altura mínima) vazava
+  por cima. Painel deitado e linha `minmax(min-content, 1fr)`.
+- **`.placa` da lateral da carreira aumentou o nome nos lugares da sala online**, que também
+  usam `.placa`. A regra da carreira agora vale só para `#resumo-sessao`.
 - **Scripts de teste quebravam ao imprimir ♣** no console cp1252 do Windows. Agora forçam
   UTF-8 na saída.
 

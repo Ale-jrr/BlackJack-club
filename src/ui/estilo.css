@@ -602,15 +602,15 @@ main { height: calc(100% - var(--topo)); overflow: hidden; }
 .lateral .cartao { overflow: hidden; display: grid; grid-template-rows: auto 1fr; min-height: 0; }
 
 /* Placa da mesa: uma linha por número, rótulo à esquerda e valor à direita. */
-.placa > div {
+#resumo-sessao > div {
   display: flex; justify-content: space-between; align-items: baseline;
   padding: 9px 2px; border-bottom: 1px solid rgba(217,180,91,.12);
   font-size: 13.5px; color: var(--cinza);
 }
-.placa > div:last-child { border-bottom: 0; }
-.placa b { font-size: 16px; color: var(--creme); }
-.placa b.mais { color: var(--verde); }
-.placa b.menos { color: var(--vermelho); }
+#resumo-sessao > div:last-child { border-bottom: 0; }
+#resumo-sessao b { font-size: 16px; color: var(--creme); }
+#resumo-sessao b.mais { color: var(--verde); }
+#resumo-sessao b.menos { color: var(--vermelho); }
 
 .lista-rolagem {
   overflow-y: auto; display: grid; gap: 0; align-content: start; padding-right: 4px;
@@ -1003,7 +1003,9 @@ select.entrada option { background: #10161a; }
 
 .mesa-online { display: grid; gap: 18px; grid-template-columns: 1fr; min-height: 100%; }
 .mesa-online .lateral { display: none; }
-.pano { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 100%; gap: 10px; }
+/* A linha do feltro nunca fica menor que o próprio feltro: com minmax(0, …) ele vazava
+   por cima do painel de aposta em tela baixa. Faltando altura, a tela rola. */
+.pano { display: grid; grid-template-rows: minmax(min-content, 1fr) auto; min-height: 100%; gap: 10px; }
 
 #tela-sala:has(#sala-mesa:not([hidden])) { padding: 0; }
 @media (min-width: 1100px) {
@@ -1360,16 +1362,35 @@ select.entrada option { background: #10161a; }
 
 /* ------------------------------------------------ aposta montada na sala */
 
-.montar-aposta { display: grid; gap: 10px; justify-items: center; width: min(560px, 100%); }
-.valor-da-aposta {
-  display: flex; align-items: center; gap: 10px; padding: 6px 16px;
-  background: rgba(7,9,10,.6); border: 1px solid rgba(217,180,91,.45); border-radius: 999px;
-  font-size: 22px;
+.montar-aposta {
+  display: grid; grid-template-columns: auto auto auto; align-items: center;
+  gap: 10px clamp(16px, 2.4vw, 30px); justify-content: center; width: 100%;
 }
-.valor-da-aposta .entrada {
-  width: 9ch; border: 0; background: none; padding: 4px 0; text-align: center;
-  font-size: clamp(20px, 3vw, 26px); font-weight: 800; color: var(--ouro-forte);
+/* O círculo pintado no feltro, com o valor digitável dentro. */
+.circulo-sala {
+  width: 96px; aspect-ratio: 1; border-radius: 50%;
+  display: grid; place-content: center; justify-items: center; gap: 1px; cursor: text;
+  border: 2px solid rgba(242,238,227,.5);
+  box-shadow: 0 0 0 5px rgba(0,0,0,.14), inset 0 0 0 5px rgba(0,0,0,.14), inset 0 0 0 6px rgba(242,238,227,.18);
+  background: radial-gradient(circle, rgba(13,59,46,.9), rgba(7,31,24,.9));
 }
-.valor-da-aposta .entrada:focus { outline: none; }
-.fichas-da-sala .ficha { width: clamp(44px, 6.6vmin, 58px); height: clamp(44px, 6.6vmin, 58px); }
-.atalhos-aposta .botao { min-height: 38px; min-width: 0; padding: 0 12px; font-size: 12px; }
+.circulo-sala:focus-within { border-color: var(--ouro); }
+.circulo-sala .rot { font-size: 9.5px; letter-spacing: .24em; color: rgba(242,238,227,.6); }
+.circulo-sala input {
+  width: 80px; border: 0; background: none; padding: 0; text-align: center;
+  font: 800 22px var(--fonte); color: var(--ouro-forte);
+}
+.circulo-sala input:focus { outline: none; }
+.meio-aposta { display: grid; gap: 8px; justify-items: center; }
+.fichas-da-sala .ficha { --lado: clamp(44px, 6.4vmin, 56px); }
+.atalhos-aposta { display: flex; gap: 4px 18px; flex-wrap: wrap; justify-content: center; }
+.atalhos-aposta button {
+  font-size: 11.5px; font-weight: 800; letter-spacing: .16em; color: rgba(242,238,227,.72); padding: 4px 2px;
+}
+.atalhos-aposta button:hover:not(:disabled) { color: var(--ouro-forte); }
+.atalhos-aposta button:disabled { opacity: .35; }
+/* No celular: círculo e botão lado a lado, fichas e atalhos embaixo. */
+@media (max-width: 640px) {
+  .montar-aposta { grid-template-columns: auto auto; }
+  .meio-aposta { grid-column: 1 / -1; grid-row: 2; }
+}
